@@ -31,7 +31,7 @@ title = "無限西洋棋 | 首頁—官網" # The tab title
 secondary_title = "實況西洋棋的官網！"
 what_is_it_title = "這是什麼？"
 what_is_it_pargaraphs = [
-"Infinite Chess is a variant of chess in which there are no borders, much larger than your familiar 8x8 board. The queen, rooks, and bishops have <em>no limit</em> to how far they can move per turn. Pick any natural number up to infinity!",
+"無限西洋棋是沒有邊界的一種變種西洋棋。對於每一回合棋子的移動距離完全<em>沒有限制</em>。挑任何一個自然數或甚至是無限大的距離！",
 "With no limit to how far you can move, there are positions possible where the doomsday clock, or checkmate-in-<em>blank</em>, number is represented by the first infinite ordinal, <strong>omega ω</strong>. In fact, researches have discovered that <strong>any</strong> countable ordinal is achievable for the checkmate clock!",
 "As you can imagine, there are infinite possibilites for starting configurations, many of which you can play competitively! Your end goal is still checkmate, which requires new tactics seeing as there are no walls to trap the enemy king against. Games don't typically last much longer than normal chess games. Pawns also still promote at ranks 1 & 8!",
 ]
@@ -573,13 +573,13 @@ ws-member_not_found = "Member not found"
 ws-forbidden_wrong_account = "Forbidden. This is not your account."
 ws-deleting_account_not_found = "Failed to delete account. Account not found."
 ws-server_error = "Sorry, there was a server error! Please go back."
-ws-unable_to_identify_client_ip = "Unable to identify client IP address"
-ws-you_are_banned_by_server = "You are banned"
-ws-too_many_requests_to_server = "Too Many Requests. Try again soon."
-ws-bad_request = "Bad Request"
-ws-not_found = "404 Not Found"
-ws-forbidden = "Forbidden."
-ws-unauthorized_patron_page = "Unauthorized. This page is patron-exclusive."
+ws-unable_to_identify_client_ip = "451 無法辨識 IP 地址"
+ws-you_are_banned_by_server = "403 您被封禁了"
+ws-too_many_requests_to_server = "429 請求過多，請過一段時間後再試一次"
+ws-bad_request = "400 無效請求"
+ws-not_found = "404 找不到"
+ws-forbidden = "403 無權限"
+ws-unauthorized_patron_page = "403 無權限使用贊助者限定網頁"
 ws-already_in_game = "You are already in a game."
 ws-server_restarting = "The server is restarting in" # The server inserts a number immediately after this, followed by the correct plurality of minutes.
 ws-server_under_maintenance = "Server is under maintenance. Check back soon!" # Can be changed at will to change the display message.
