@@ -35,19 +35,19 @@ what_is_it_pargaraphs = [
 "With no limit to how far you can move, there are positions possible where the doomsday clock, or checkmate-in-<em>blank</em>, number is represented by the first infinite ordinal, <strong>omega ω</strong>. In fact, researches have discovered that <strong>any</strong> countable ordinal is achievable for the checkmate clock!",
 "As you can imagine, there are infinite possibilites for starting configurations, many of which you can play competitively! Your end goal is still checkmate, which requires new tactics seeing as there are no walls to trap the enemy king against. Games don't typically last much longer than normal chess games. Pawns also still promote at ranks 1 & 8!",
 ]
-how_to_title = "How can I play?"
+how_to_title = "如何遊玩？"
 how_to_paragraph = ["The current version release is 1.4 on the ","下棋"," page!"]
 about_title = "About the Project"
 about_paragraphs = [
 "I am Naviary. Since I first discovered Infinite Chess (the concept existed long before this website), I have been very intrigued by it and its possibilities! Up to just recently, playing has been quite difficult, requiring chess.com members to create images of the current board and send them back and forth for every move played. Due to this, not many people know about or have been able to play this.",
 ["It is my goal to build a way to make this easily playable for everyone, and grow a community surrounding it. I have spent countless hours of my own time on this website, up-keeping, and developing the game. I have many more ideas that will keep me occupied for some time. While I wish to keep this free-to-play, life has requirements, to help support me financially please consider joining my", "Patreon"]
 ]
-patreon_title = "Patreon Supporters"
+patreon_title = "Patreon 支持者"
 
 [credits]
-title = "Credits"
+title = "銘謝"
 copyright = "Anything on the website that is not listed below is copyright of www.InfiniteChess.org"
-variants_heading = "Variants"
+variants_heading = "變種"
 variants_credits = [
 "Core designed by Andreas Tsevas.",
 "Space designed by Andreas Tsevas.",
@@ -134,12 +134,12 @@ rules_paragraphs = [
 "Square notation is no longer described by the letter and rank number (i.e., a1), rather, each square is defined by a pair of x and y coordinates. The a1 square has become (1,1), and the h8 square has become (8,8). On desktop devices, the coordinate your mouse is over is displayed at the top of the screen.",
 "All other rules are the same as in classical chess, such as checkmate, stalemate, 3-fold repetition, the 50-move rule, castling, en passant, etc.!"
 ]
-careful_heading = "Be Careful!"
+careful_heading = "小心！"
 careful_paragraphs = [
 "The openness of the infinite board means it is very easy to exploit forks, pins, and skewers. Your backside is often very vulnerable. Watch out for tactics like this! Be creative about forming protection for your king and rooks! Opening strategy is very different from classical chess.",
 "Many other variants have been created with the aim of strengthening your backside."
 ]
-controls_heading = "Controls"
+controls_heading = "控制"
 controls_paragraph = "Click and drag the board to move around. Scroll to zoom in and out. Click any piece, including your opponent's pieces, to view their legal moves at any point! Additional controls are:"
 keybinds = [
 " to move around.",
@@ -180,18 +180,18 @@ void = {name="Void", description="A neutral piece (not controlled by either play
 
 [play.play-menu]
 title = "下棋 - Online"
-colors = "Colors"
-online = "Online"
-local = "Local"
-computer = "Computer"
-variant = "Variant"
-Classical = "Classical"
-Classical_Plus = "Classical+"
+colors = "顏色"
+online = "線上"
+local = "本機"
+computer = "電腦"
+variant = "變種"
+Classical = "經典"
+Classical_Plus = "經典加強版"
 CoaIP = "Chess on an Infinite Plane"
 Pawndard = "Pawndard"
 Knighted_Chess = "Knighted Chess"
 Knightline = "Knightline"
-Core = "Core"
+Core = "核心"
 Standarch = "Standarch"
 Pawn_Horde = "Pawn Horde"
 Space_Classic = "Space Classic"
@@ -275,7 +275,7 @@ invite_copied = "Copied invite code to clipboard."
 move_counter = "Move:"
 constructing_mesh = "Constructing mesh"
 rotating_mesh = "Rotating mesh"
-lost_connection = "Lost connection."
+lost_connection = "失去連線"
 please_wait = "Please wait a moment to perform this task."
 webgl_unsupported = "Your browser does not support WebGL. This game requires that to function. Please update your browser."
 bigints_unsupported = "BigInts are not supported. Please upgrade your browser.\nBigInts are needed to make the board infinite."
