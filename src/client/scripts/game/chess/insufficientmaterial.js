@@ -1,7 +1,21 @@
-// Draw detection by insufficient material
+
+// Import Start
+import wincondition from './wincondition.js';
+import gamefileutility from './gamefileutility.js';
+import movesscript from './movesscript.js';
+import colorutil from '../misc/colorutil.js';
+import coordutil from '../misc/coordutil.js';
+import gamerules from '../variants/gamerules.js';
+// Import End
+
+/** 
+ * Type Definitions 
+ * @typedef {import('./gamefile.js').gamefile} gamefile
+ */
 
 "use strict";
 
+/** This script detects draws by insufficient material. */
 const insufficientmaterial = (function() {
 
     // Lists of scenarios that lead to a draw by insufficient material
@@ -139,8 +153,8 @@ const insufficientmaterial = (function() {
      */
     function detectInsufficientMaterial(gamefile) {
         // Only make the draw check if the win condition is checkmate for both players
-        if (!wincondition.doesColorHaveWinCondition(gamefile, 'white', 'checkmate') || !wincondition.doesColorHaveWinCondition(gamefile, 'black', 'checkmate')) return false;
-        if (wincondition.getWinConditionCountOfColor(gamefile, 'white') != 1 || wincondition.getWinConditionCountOfColor(gamefile, 'black') != 1) return false;
+        if (!gamerules.doesColorHaveWinCondition(gamefile.gameRules, 'white', 'checkmate') || !gamerules.doesColorHaveWinCondition(gamefile.gameRules, 'black', 'checkmate')) return false;
+        if (gamerules.getWinConditionCountOfColor(gamefile.gameRules, 'white') != 1 || gamerules.getWinConditionCountOfColor(gamefile.gameRules, 'black') != 1) return false;
 
         // Only make the draw check if the last move was a capture or if there is no last move
         const lastMove = movesscript.getLastMove(gamefile.moves);
@@ -157,9 +171,9 @@ const insufficientmaterial = (function() {
         for (const key in gamefile.piecesOrganizedByKey) {
             const piece = gamefile.piecesOrganizedByKey[key];
             if (piece === "obstaclesN") continue;
-            else if (math.trimWorBFromType(piece) === "bishops") {
-                const parity = sum_tuple_coords(math.getCoordsFromKey(key)) % 2;
-                const color = math.getWorBFromType(piece);
+            else if (colorutil.trimColorExtensionFromType(piece) === "bishops") {
+                const parity = sum_tuple_coords(coordutil.getCoordsFromKey(key)) % 2;
+                const color = colorutil.getColorExtensionFromType(piece);
                 if (color === "W") bishopsW_count[parity] += 1;
                 else if (color === "B") bishopsB_count[parity] += 1;
             }
@@ -199,3 +213,5 @@ const insufficientmaterial = (function() {
     });
 
 })();
+
+export default insufficientmaterial;

@@ -1,9 +1,36 @@
 
-// This script renders our single-line legal sliding moves
-// when we are zoomed out far.
+// Import Start
+import input from '../input.js';
+import bufferdata from './bufferdata.js';
+import perspective from './perspective.js';
+import miniimage from './miniimage.js';
+import board from './board.js';
+import transition from './transition.js';
+import organizedlines from '../chess/organizedlines.js';
+import options from './options.js';
+import selection from '../chess/selection.js';
+import camera from './camera.js';
+import pieces from './pieces.js';
+import math from '../misc/math.js';
+import movement from './movement.js';
+import buffermodel from './buffermodel.js';
+import jsutil from '../misc/jsutil.js';
+import coordutil from '../misc/coordutil.js';
+import space from '../misc/space.js';
+// Import End
+
+/**
+ * Type Definitions
+ * @typedef {import('./buffermodel.js').BufferModel} BufferModel
+ * @typedef {import('../misc/math.js').BoundingBox} BoundingBox
+ */
 
 "use strict";
 
+/**
+ * This script renders our single-line legal sliding moves
+ * when we are zoomed out far.
+ */
 const highlightline = (function() {
 
     /** The buffer model of the legal move lines when zoomed out.
@@ -27,11 +54,11 @@ const highlightline = (function() {
 
         const dataLines = [];
 
-        const legalmoves = math.deepCopyObject(selection.getLegalMovesOfSelectedPiece());
+        const legalmoves = jsutil.deepCopyObject(selection.getLegalMovesOfSelectedPiece());
         const pieceCoords = selection.getPieceSelected().coords;
-        const worldSpaceCoords = math.convertCoordToWorldSpace(pieceCoords);
+        const worldSpaceCoords = space.convertCoordToWorldSpace(pieceCoords);
 
-        const color = math.deepCopyObject(options.getLegalMoveHighlightColor());
+        const color = jsutil.deepCopyObject(options.getLegalMoveHighlightColor());
         color[3] = 1;
 
         const snapDist = miniimage.gwidthWorld() / 2;
@@ -45,7 +72,7 @@ const highlightline = (function() {
         let closestDistance;
         let closestPoint;
         for (const strline in legalmoves.sliding) {
-            const line = math.getCoordsFromKey(strline);
+            const line = coordutil.getCoordsFromKey(strline);
             const diag = organizedlines.getCFromLine(line, worldSpaceCoords);
             const lineIsVertical = line[0] === 0;
             
@@ -54,7 +81,7 @@ const highlightline = (function() {
             let point1 = math.getLineIntersectionEntryTile(line[0], line[1], diag, boundingBox, corner1);
             if (!point1) continue;
             const leftLimitPointCoord = getPointOfDiagSlideLimit(pieceCoords, legalmoves.sliding[strline], line, false);
-            const leftLimitPointWorld = math.convertCoordToWorldSpace(leftLimitPointCoord);
+            const leftLimitPointWorld = space.convertCoordToWorldSpace(leftLimitPointCoord);
             point1 = capPointAtSlideLimit(point1, leftLimitPointWorld, false, lineIsVertical);
 
             const corner2 = math.getAABBCornerOfLine(line, false);
@@ -62,7 +89,7 @@ const highlightline = (function() {
             let point2 = math.getLineIntersectionEntryTile(line[0], line[1], diag, boundingBox, corner2);
             if (!point2) continue; // I hate this
             const rightLimitPointCoord = getPointOfDiagSlideLimit(pieceCoords, legalmoves.sliding[strline], line, true);
-            const rightLimitPointWorld = math.convertCoordToWorldSpace(rightLimitPointCoord);
+            const rightLimitPointWorld = space.convertCoordToWorldSpace(rightLimitPointCoord);
             point2 = capPointAtSlideLimit(point2, rightLimitPointWorld, true, lineIsVertical);
 
             appendLineToData(dataLines, point1, point2, color);
@@ -120,7 +147,7 @@ const highlightline = (function() {
         let point1;
         let point2;
 
-        boundingBox = perspective.getEnabled() ? math.generatePerspectiveBoundingBox(perspectiveLimitToTeleport) : board.gboundingBox();
+        boundingBox = perspective.getEnabled() ? board.generatePerspectiveBoundingBox(perspectiveLimitToTeleport) : board.gboundingBox();
 
         const line = closestPoint.line;
         const diag = organizedlines.getCFromLine(line, pieceCoords);
@@ -198,3 +225,5 @@ const highlightline = (function() {
     });
 
 })();
+
+export default highlightline;

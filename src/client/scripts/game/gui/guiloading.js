@@ -1,8 +1,13 @@
 
-// This script is able to stop the loading animation as soon as the page fully loads.
+// Import Start
+import gui from './gui.js';
+import camera from '../rendering/camera.js';
+import style from './style.js';
+// Import End
 
 "use strict";
 
+/** This script is able to stop the loading animation as soon as the page fully loads. */
 const guiloading = (function() {
 
     // Loading Animation Before Page Load
@@ -23,3 +28,5 @@ const guiloading = (function() {
     });
 
 })();
+
+export default guiloading;

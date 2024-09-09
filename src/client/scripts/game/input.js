@@ -1,9 +1,28 @@
 
-// This script handles all our event listeners for our input actions,
-// and keeps track of what inputs were received every frame.
+// Import Start
+import guipause from './gui/guipause.js';
+import bufferdata from './rendering/bufferdata.js';
+import onlinegame from './misc/onlinegame.js';
+import perspective from './rendering/perspective.js';
+import movement from './rendering/movement.js';
+import options from './rendering/options.js';
+import selection from './chess/selection.js';
+import camera from './rendering/camera.js';
+import board from './rendering/board.js';
+import arrows from './rendering/arrows.js';
+import buffermodel from './rendering/buffermodel.js';
+import jsutil from './misc/jsutil.js';
+import space from './misc/space.js';
+import frametracker from './rendering/frametracker.js';
+import docutil from './misc/docutil.js';
+// Import End
 
 "use strict";
 
+/**
+ * This script handles all our event listeners for our input actions,
+ * and keeps track of what inputs were received every frame.
+ */
 const input = (function() {
 
     const overlayElement = document.getElementById('overlay'); // <div> element overtop the canvas. This is what detects all clicks and touches.
@@ -113,9 +132,7 @@ const input = (function() {
     }
 
     function checkIfMouseNotSupported() {
-        // "pointer: coarse" are devices will less pointer accuracy (not "fine" like a mouse)
-        // See W3 documentation: https://www.w3.org/TR/mediaqueries-4/#mf-interaction
-        if (window.matchMedia("(pointer: fine)").matches) return;
+        if (docutil.isMouseSupported()) return;
         
         // Mouse not supported
         
@@ -193,7 +210,7 @@ const input = (function() {
             const touchTile = board.gtileCoordsOver(touchHelds[0].x, touchHelds[0].y).tile_Int;
             touchClickedTile = { id: touchHelds[0].id, x: touchTile[0], y: touchTile[1] };
             const oneOrNegOne = perspective.getIsViewingBlackPerspective() ? -1 : 1;
-            touchClickedWorld = [oneOrNegOne * math.convertPixelsToWorldSpace_Virtual(touchHelds[0].x), oneOrNegOne * math.convertPixelsToWorldSpace_Virtual(touchHelds[0].y)];
+            touchClickedWorld = [oneOrNegOne * space.convertPixelsToWorldSpace_Virtual(touchHelds[0].x), oneOrNegOne * space.convertPixelsToWorldSpace_Virtual(touchHelds[0].y)];
         }
     }
 
@@ -272,7 +289,7 @@ const input = (function() {
             // We need to re-render if the mouse ever moves because rendering methods test if the mouse is hovering over
             // pieces to change their opacity. The exception is if we're paused.
             const renderThisFrame = !guipause.areWePaused() && (arrows.getMode() !== 0 || movement.isScaleLess1Pixel_Virtual() || selection.isAPieceSelected() || perspective.getEnabled());
-            if (renderThisFrame) main.renderThisFrame();
+            if (renderThisFrame) frametracker.onVisualChange();
             
             const mouseCoords = convertCoords_CenterOrigin(event);
             mousePos = mouseCoords;
@@ -287,20 +304,17 @@ const input = (function() {
         });
 
         overlayElement.addEventListener('wheel', (event) => {
-            event = event || window.event;
             addMouseWheel(event);
         });
 
-        // This wheel event is ONLY for perspective mode, and it attached to the document instead of overlay!
+        // This wheel event is ONLY for perspective mode, and it attached to the document instead of overlay, because that is what the mouse is locked to.
         document.addEventListener('wheel', (event) => {
-            event = event || window.event;
             if (!perspective.getEnabled()) return;
             if (!perspective.isMouseLocked()) return;
             addMouseWheel(event);
         });
 
         overlayElement.addEventListener("mousedown", (event) => {
-            event = event || window.event;
             // We clicked with the mouse, so make the simulated touch click undefined.
             // This makes things work with devices that have both a mouse and touch.
             touchClicked = false;
@@ -363,7 +377,7 @@ const input = (function() {
         // Start the timer of when a simulated click is registered
         
         timeMouseDownSeconds = new Date().getTime() / 1000;
-        mouseClickedTile = math.convertWorldSpaceToCoords_Rounded(mouseWorldLocation);
+        mouseClickedTile = space.convertWorldSpaceToCoords_Rounded(mouseWorldLocation);
         mouseClickedPixels = mousePos;
     }
 
@@ -514,7 +528,7 @@ const input = (function() {
     }
 
     function removeMouseDown_Left() {
-        math.removeObjectFromArray(mouseDowns, leftMouseKey);
+        jsutil.removeObjectFromArray(mouseDowns, leftMouseKey);
     }
 
     function isMouseHeld_Left() {
@@ -560,8 +574,8 @@ const input = (function() {
         if (!movement.isScaleLess1Pixel_Virtual()) return; // Not zoomed out, don't render the mouse!
         const [ x, y ] = mouseWorldLocation;
 
-        const mouseInnerWidthWorld = math.convertPixelsToWorldSpace_Virtual(mouseInnerWidth);
-        const mouseOuterWidthWorld = math.convertPixelsToWorldSpace_Virtual(mouseOuterWidth);
+        const mouseInnerWidthWorld = space.convertPixelsToWorldSpace_Virtual(mouseInnerWidth);
+        const mouseOuterWidthWorld = space.convertPixelsToWorldSpace_Virtual(mouseOuterWidth);
 
         const mouseData = bufferdata.getDataRingSolid(x, y, mouseInnerWidthWorld, mouseOuterWidthWorld, 32, 0, 0, 0, mouseOpacity);
         const data32 = new Float32Array(mouseData);
@@ -582,12 +596,12 @@ const input = (function() {
             return;
         }
 
-        let touchMovementX = math.convertPixelsToWorldSpace_Virtual(touch1.changeInX);
-        let touchMovementY = math.convertPixelsToWorldSpace_Virtual(touch1.changeInY);
+        let touchMovementX = space.convertPixelsToWorldSpace_Virtual(touch1.changeInX);
+        let touchMovementY = space.convertPixelsToWorldSpace_Virtual(touch1.changeInY);
 
         if (touch2) {
-            const touch2movementX = math.convertPixelsToWorldSpace_Virtual(touch2.changeInX);
-            const touch2movementY = math.convertPixelsToWorldSpace_Virtual(touch2.changeInY);
+            const touch2movementX = space.convertPixelsToWorldSpace_Virtual(touch2.changeInX);
+            const touch2movementY = space.convertPixelsToWorldSpace_Virtual(touch2.changeInY);
             touchMovementX = (touchMovementX + touch2movementX) / 2;
             touchMovementY = (touchMovementY + touch2movementY) / 2;
             setTouchesChangeInXYTo0(touch2);
@@ -652,3 +666,5 @@ const input = (function() {
     });
 
 })();
+
+export default input;

@@ -1,11 +1,51 @@
 
-/**
- * This script stores our currently loaded game,
- * and holds our update and render methods.
+// Import Start
+import onlinegame from '../misc/onlinegame.js';
+import gui from '../gui/gui.js';
+import gamefileutility from './gamefileutility.js';
+import arrows from '../rendering/arrows.js';
+import guipromotion from '../gui/guipromotion.js';
+import guinavigation from '../gui/guinavigation.js';
+import pieces from '../rendering/pieces.js';
+import invites from '../misc/invites.js';
+import guititle from '../gui/guititle.js';
+import guipause from '../gui/guipause.js';
+import input from '../input.js';
+import miniimage from '../rendering/miniimage.js';
+import clock from '../misc/clock.js';
+import piecesmodel from '../rendering/piecesmodel.js';
+import movement from '../rendering/movement.js';
+import selection from './selection.js';
+import camera from '../rendering/camera.js';
+import board from '../rendering/board.js';
+import movesscript from './movesscript.js';
+import animation from '../rendering/animation.js';
+import webgl from '../rendering/webgl.js';
+import perspective from '../rendering/perspective.js';
+import highlightline from '../rendering/highlightline.js';
+import transition from '../rendering/transition.js';
+import wincondition from './wincondition.js';
+import options from '../rendering/options.js';
+import copypastegame from './copypastegame.js';
+import highlights from '../rendering/highlights.js';
+import promotionlines from '../rendering/promotionlines.js';
+import guigameinfo from '../gui/guigameinfo.js';
+import loadbalancer from '../misc/loadbalancer.js';
+import gamerules from '../variants/gamerules.js';
+import gamecontroller from '../misc/gamecontroller.js';
+// Import End
+
+/** 
+ * Type Definitions 
+ * @typedef {import('./gamefile.js').gamefile} gamefile
  */
 
 "use strict";
 
+/**
+ * This script stores our currently loaded game,
+ * and holds our update and render methods.
+ */
 const game = (function() {
 
     /**
@@ -55,10 +95,7 @@ const game = (function() {
 
     // Update the game every single frame
     function update() {
-        if (input.isKeyDown('`')) options.toggleDeveloperMode();
-        // if (input.isKeyDown('enter')) options.toggleChristmasTheme()
-        if (input.isKeyDown('m')) options.toggleFPS();
-        if (game.getGamefile()?.mesh.locked && input.isKeyDown('z')) main.sforceCalc(true);
+        gamecontroller.update();
 
         if (gui.getScreen().includes('title')) updateTitleScreen();
         else updateBoard(); // Other screen, board is visible, update everything board related
@@ -151,14 +188,13 @@ const game = (function() {
         } else miniimage.enable();
 
         // Do we need to convert any checkmate win conditions to royalcapture?
-        if (!wincondition.isCheckmateCompatibleWithGame(gamefile)) wincondition.swapCheckmateForRoyalCapture(gamefile);
+        if (!wincondition.isCheckmateCompatibleWithGame(gamefile)) gamerules.swapCheckmateForRoyalCapture(gamefile.gameRules);
 
         guipromotion.initUI(gamefile.gameRules.promotionsAllowed);
 
         // Regenerate the mesh of all the pieces.
         piecesmodel.regenModel(game.getGamefile(), options.getPieceRegenColorArgs());
 
-        main.enableForceRender(); // Renders the screen EVEN in a local-pause
         guinavigation.update_MoveButtons();
 
         guigameinfo.updateWhosTurn(gamefile);
@@ -205,3 +241,5 @@ const game = (function() {
     });
 
 })();
+
+export default game;

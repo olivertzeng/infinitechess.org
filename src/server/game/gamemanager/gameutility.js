@@ -16,23 +16,28 @@ import { getTranslation } from '../../utility/translate.js';
 import { ensureJSONString } from '../../utility/JSONUtils.js';
 
 // Custom imports
-import variant1 from '../variant1.js';
-import math1 from '../math1.js';
 import clockweb from '../clockweb.js';
 import wsutility from '../wsutility.js';
 const { sendNotify, sendNotifyError } = wsutility;
-import wincondition1 from '../wincondition1.js';
-import formatconverter1 from '../formatconverter1.js';
-import movesscript1 from '../movesscript1.js';
+import formatconverter from '../../../client/scripts/game/chess/formatconverter.js';
 
 import { getTimeServerRestarting } from '../timeServerRestarts.js';
 import { doesColorHaveExtendedDrawOffer, getLastDrawOfferPlyOfColor } from './drawoffers.js';
+import timeutil from '../../../client/scripts/game/misc/timeutil.js';
+import colorutil from '../../../client/scripts/game/misc/colorutil.js';
+import variant from '../../../client/scripts/game/variants/variant.js';
+import jsutil from '../../../client/scripts/game/misc/jsutil.js';
+import winconutil from '../../../client/scripts/game/misc/winconutil.js';
+
+// Type Definitions...
 
 /**
- * Type Definitions
  * @typedef {import('../TypeDefinitions.js').Socket} Socket
  * @typedef {import('../TypeDefinitions.js').Game} Game
  */
+/* eslint-disable no-unused-vars */
+import { GameRules } from '../../../client/scripts/game/variants/gamerules.js';
+/* eslint-enable no-unused-vars */
 
 const gameutility = (function() {
 
@@ -65,7 +70,7 @@ const gameutility = (function() {
             incrementMillis: null,
             rated: inviteOptions.rated === "Rated",
             moves: [],
-            turnOrder: variant1.getGameRulesOfVariant({ Variant: inviteOptions.variant }).turnOrder,
+            gameRules: variant.getGameRulesOfVariant({ Variant: inviteOptions.variant }),
             gameConclusion: false,
             disconnect: {
                 startTimer: {},
@@ -79,8 +84,8 @@ const gameutility = (function() {
 
         if (!newGame.untimed) { // Set the start time and increment properties
             const { minutes, increment } = clockweb.getMinutesAndIncrementFromClock(inviteOptions.clock);
-            newGame.startTimeMillis = math1.minutesToMillis(minutes);
-            newGame.incrementMillis = math1.secondsToMillis(increment);
+            newGame.startTimeMillis = timeutil.minutesToMillis(minutes);
+            newGame.incrementMillis = timeutil.secondsToMillis(increment);
             // Set the clocks
             newGame.timerWhite = newGame.startTimeMillis;
             newGame.timerBlack = newGame.startTimeMillis;
@@ -94,7 +99,7 @@ const gameutility = (function() {
         newGame.black = black;
 
         // Set whos turn
-        newGame.whosTurn = newGame.turnOrder[0];
+        newGame.whosTurn = newGame.gameRules.turnOrder[0];
 
         // Auto-subscribe the players to this game!
         // This will link their socket to this game, modify their
@@ -235,10 +240,10 @@ const gameutility = (function() {
      * @param {number} replyto - The ID of the incoming socket message. This is used for the `replyto` property on our response.
      */
     function sendGameInfoToPlayer(game, playerSocket, playerColor, replyto) {
-        const { UTCDate, UTCTime } = math1.convertTimestampToUTCDateUTCTime(game.timeCreated);
+        const { UTCDate, UTCTime } = timeutil.convertTimestampToUTCDateUTCTime(game.timeCreated);
 
         const RatedOrCasual = game.rated ? "Rated" : "Casual";
-        const opponentColor = math1.getOppositeColor(playerColor);
+        const opponentColor = colorutil.getOppositeColor(playerColor);
         const gameOptions = {
             metadata: {
                 Event: `${RatedOrCasual} ${getTranslation(`play.play-menu.${game.variant}`)} infinite chess game`,
@@ -327,7 +332,7 @@ const gameutility = (function() {
         const playerSocket = color === 'white' ? game.whiteSocket : game.blackSocket;
         if (!playerSocket) return; // Not connected, cant send message
 
-        const opponentColor = math1.getOppositeColor(color);
+        const opponentColor = colorutil.getOppositeColor(color);
         const messageContents = {
             gameConclusion: game.gameConclusion,
             moves: game.moves, // Send the final move list so they can make sure they're in sync.
@@ -411,31 +416,30 @@ const gameutility = (function() {
          * moves
          * gameRules
          */
-        const { victor, condition } = wincondition1.getVictorAndConditionFromGameConclusion(game.gameConclusion);
-        const { UTCDate, UTCTime } = math1.convertTimestampToUTCDateUTCTime(game.timeCreated);
-        const positionStuff = variant1.getStartingPositionOfVariant({ Variant: game.variant, Date }); // 3 properties: position, positionString, and specialRights.
+        const { victor, condition } = winconutil.getVictorAndConditionFromGameConclusion(game.gameConclusion);
+        const { UTCDate, UTCTime } = timeutil.convertTimestampToUTCDateUTCTime(game.timeCreated);
         const RatedOrCasual = game.rated ? "Rated" : "Casual";
+        const gameRules = jsutil.deepCopyObject(game.gameRules);
         const metadata = {
             Event: `${RatedOrCasual} ${getTranslation(`play.play-menu.${game.variant}`)} infinite chess game`,
             Site: "https://www.infinitechess.org/",
             Round: "-",
-            Variant: game.variant, // Don't translate yet, as variant1 needs the variant code to fetch gamerules.
+            Variant: game.variant, // Don't translate yet, as variant.js needs the variant code to fetch gamerules.
             White: getDisplayNameOfPlayer(game.white),
             Black: getDisplayNameOfPlayer(game.black),
             TimeControl: game.clock,
             UTCDate,
             UTCTime,
-            Result: victor === 'white' ? '1-0' : victor === 'black' ? '0-1' : victor === 'draw' ? '1/2-1/2' : '0-0',
-            Termination: wincondition1.getTerminationInEnglish(condition)
+            Result: winconutil.getResultFromVictor(victor),
+            Termination: getTerminationInEnglish(gameRules, condition)
         };
-        const gameRules = variant1.getGameRulesOfVariant(metadata, positionStuff.position);
+        const moveRule = gameRules.moveRule ? `0/${gameRules.moveRule}` : undefined;
         delete gameRules.moveRule;
-        metadata.Variant = getTranslation(`play.play-menu.${game.variant}`); // Only now translate it after variant1 has gotten the game rules.
+        metadata.Variant = getTranslation(`play.play-menu.${game.variant}`); // Only now translate it after variant.js has gotten the game rules.
         const primedGamefile = {
             metadata,
-            moveRule: gameRules.moveRule ? `0/${gameRules.moveRule}` : undefined,
+            moveRule,
             fullMove: 1,
-            startingPosition: positionStuff.positionString, // Technically not needed, as we set `specifyPosition` to false
             moves: game.moves,
             gameRules
         };
@@ -444,7 +448,7 @@ const gameutility = (function() {
 
         let ICN = 'ICN UNAVAILABLE';
         try {
-            ICN = formatconverter1.LongToShort_Format(primedGamefile, { compact_moves: 1, make_new_lines: false, specifyPosition: false });
+            ICN = formatconverter.LongToShort_Format(primedGamefile, { compact_moves: 1, make_new_lines: false, specifyPosition: false });
         } catch (e) {
             const errText = `Error when logging game and converting to ICN! The primed gamefile:\n${JSON.stringify(primedGamefile)}\n${e.stack}`;
             await logEvents(errText, 'errLog.txt', { print: true });
@@ -614,7 +618,7 @@ const gameutility = (function() {
         if (color !== 'white' && color !== 'black') return console.error(`colorJustMoved must be white or black! ${color}`);
         
         const message = {
-            move: movesscript1.getLastMove(game.moves),
+            move: getLastMove(game),
             gameConclusion: game.gameConclusion,
             moveNumber: game.moves.length,
             timerWhite: game.timerWhite,
@@ -632,6 +636,51 @@ const gameutility = (function() {
      */
     function cancelDeleteGameTimer(game) {
         clearTimeout(game.deleteTimeoutID);
+    }
+
+    /**
+     * Tests if the game is resignable (atleast 2 moves have been played).
+     * If not, then the game is abortable.
+     * @param {Game} game - The game
+     * @returns {boolean} *true* if the game is resignable.
+     */
+    function isGameResignable(game) { return game.moves.length > 1; }
+
+    /**
+     * Returns the last, or most recent, move in the provided game's move list, or undefined if there isn't one.
+     * @param {Game} game - The moves list, with the moves in most compact notation: `1,2>3,4N`
+     * @returns {string | undefined} The move, in most compact notation, or undefined if there isn't one.
+     */
+    function getLastMove(game) {
+        const moves = game.moves;
+        if (moves.length === 0) return;
+        return moves[moves.length - 1];
+    }
+
+    /**
+     * Returns the color of the player that played that moveIndex within the moves list.
+     * Returns error if index -1
+     * @param {Game} game
+     * @param {number} i - The moveIndex
+     * @returns {string} - The color that played the moveIndex
+     */
+    function getColorThatPlayedMoveIndex(game, i) {
+        if (i === -1) return console.error("Cannot get color that played move index when move index is -1.");
+        const turnOrder = game.gameRules.turnOrder;
+        return turnOrder[i % turnOrder.length];
+    }
+
+    /**
+     * Returns the termination of the game in english language.
+     * @param {GameRules} gameRules
+     * @param {string} condition - The 2nd half of the gameConclusion: checkmate/stalemate/repetition/moverule/insuffmat/allpiecescaptured/royalcapture/allroyalscaptured/resignation/time/aborted/disconnect
+     */
+    function getTerminationInEnglish(gameRules, condition) {
+        if (condition === 'moverule') { // One exception
+            const numbWholeMovesUntilAutoDraw = gameRules.moveRule / 2;
+            return `${getTranslation('play.javascript.termination.moverule.0')}${numbWholeMovesUntilAutoDraw}${getTranslation('play.javascript.termination.moverule.1')}`;
+        }
+        return getTranslation(`play.javascript.termination.${condition}`);
     }
 
     return Object.freeze({
@@ -653,7 +702,9 @@ const gameutility = (function() {
         sendUpdatedClockToColor,
         sendMoveToColor,
         getDisplayNameOfPlayer,
-        cancelDeleteGameTimer
+        cancelDeleteGameTimer,
+        isGameResignable,
+        getColorThatPlayedMoveIndex,
     });
 
 })();

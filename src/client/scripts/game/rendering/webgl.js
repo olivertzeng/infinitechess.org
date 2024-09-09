@@ -1,8 +1,7 @@
 
-/**
- * This script stores our global WebGL rendering context,
- * and other utility methods.
- */
+// Import Start
+import camera from './camera.js';
+// Import End
 
 /**
  * The WebGL rendering context. This is our web-based render engine.
@@ -10,6 +9,10 @@
  */
 let gl; // The WebGL context. Is initiated in initGL()
 
+/**
+ * This script stores our global WebGL rendering context,
+ * and other utility methods.
+ */
 const webgl = (function() {
 
     /**
@@ -196,3 +199,7 @@ const webgl = (function() {
         queryWebGLContextInfo
     });
 })();
+
+export default webgl;
+
+export { gl };

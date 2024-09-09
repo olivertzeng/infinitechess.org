@@ -1,10 +1,16 @@
 
-/**
- * Converts pre-1.3 old gamefile code into the new internal format.
- */
+// Import Start
+import formatconverter from './formatconverter.js';
+import movesscript from './movesscript.js';
+import jsutil from '../misc/jsutil.js';
+import variant from '../variants/variant.js';
+// Import End
 
 'use script';
 
+/**
+ * Converts pre-1.3 old gamefile code into the new internal format.
+ */
 const backcompatible = (function() {
 
     /**
@@ -96,7 +102,7 @@ const backcompatible = (function() {
         }
 
         console.log("longformat after converting to new format:");
-        console.log(math.deepCopyObject(converted));
+        console.log(jsutil.deepCopyObject(converted));
 
         return converted;
     }
@@ -160,3 +166,5 @@ const backcompatible = (function() {
     }); 
 
 })();
+
+export default backcompatible;

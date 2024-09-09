@@ -1,14 +1,29 @@
 
-/*
+// Import Start
+import gamefileutility from './gamefileutility.js';
+import pieces from '../rendering/pieces.js';
+import math from '../misc/math.js';
+import piecesmodel from '../rendering/piecesmodel.js';
+import options from '../rendering/options.js';
+import colorutil from '../misc/colorutil.js';
+import typeutil from '../misc/typeutil.js';
+import coordutil from '../misc/coordutil.js';
+// Import End
+
+/** 
+ * Type Definitions 
+ * @typedef {import('./gamefile.js').gamefile} gamefile
+*/
+
+
+"use strict";
+
+/**
  * This script manages the organized lines of all pieces in the current game.
  * For example, pieces organized by type, coordinate, vertical, horizontal, diagonal, etc.
  * 
  * These dramatically increase speed of legal move calculation.
  */
-
-"use strict";
-
-// Module
 const organizedlines = {
     /**
      * Organizes all the pieces of the specified game into many different lists,
@@ -46,7 +61,7 @@ const organizedlines = {
 
         const lines = gamefile.startSnapshot.slidingPossible;
         for (let i = 0; i < lines.length; i++) {
-            gamefile.piecesOrganizedByLines[math.getKeyFromCoords(lines[i])] = {};
+            gamefile.piecesOrganizedByLines[coordutil.getKeyFromCoords(lines[i])] = {};
         }
     },
 
@@ -58,7 +73,7 @@ const organizedlines = {
 
         // Organize by key
         // First, turn the coords into a key in the format 'x,y'
-        let key = math.getKeyFromCoords(coords);
+        let key = coordutil.getKeyFromCoords(coords);
         // Is there already a piece there? (Desync)
         if (gamefile.piecesOrganizedByKey[key]) throw new Error(`While organizing a piece, there was already an existing piece there!! ${coords}`);
         gamefile.piecesOrganizedByKey[key] = type;
@@ -68,7 +83,7 @@ const organizedlines = {
         for (let i = 0; i < lines.length; i++) {
             const line = lines[i];
             key = organizedlines.getKeyFromLine(line,coords);
-            const strline = math.getKeyFromCoords(line);
+            const strline = coordutil.getKeyFromCoords(line);
             // Is line initialized
             if (!gamefile.piecesOrganizedByLines[strline][key]) gamefile.piecesOrganizedByLines[strline][key] = [];
             gamefile.piecesOrganizedByLines[strline][key].push(piece);
@@ -80,7 +95,7 @@ const organizedlines = {
     removeOrganizedPiece: function(gamefile, coords) {
 
         // Make the piece key undefined in piecesOrganizedByKey object  
-        let key = math.getKeyFromCoords(coords);
+        let key = coordutil.getKeyFromCoords(coords);
         if (!gamefile.piecesOrganizedByKey[key]) throw new Error(`No organized piece at coords ${coords} to delete!`);
         // Delete is needed, I can't just set the key to undefined, because the object retains the key as 'undefined'
         delete gamefile.piecesOrganizedByKey[key]; 
@@ -110,7 +125,7 @@ const organizedlines = {
 
     initUndefineds: function(gamefile) {
         // Add extra undefined pieces into each type array!
-        pieces.forEachPieceType(init);
+        typeutil.forEachPieceType(init);
         function init(listType) {
             const list = gamefile.ourPieces[listType];
             list.undefineds = [];
@@ -127,7 +142,7 @@ const organizedlines = {
      * @param {gamefile} gamefile - The gamefile
      */
     appendUndefineds: function(gamefile) {
-        pieces.forEachPieceType(append);
+        typeutil.forEachPieceType(append);
 
         function append(listType) {
             if (!organizedlines.isTypeATypeWereAppendingUndefineds(gamefile, listType)) return;
@@ -140,7 +155,7 @@ const organizedlines = {
     areWeShortOnUndefineds: function(gamefile) {
 
         let weShort = false;
-        pieces.forEachPieceType(areWeShort);
+        typeutil.forEachPieceType(areWeShort);
 
         function areWeShort(listType) {
             if (!organizedlines.isTypeATypeWereAppendingUndefineds(gamefile, listType)) return;
@@ -167,7 +182,7 @@ const organizedlines = {
     addMoreUndefineds: function(gamefile, { regenModel = true, log = false } = {}) {
         if (log) console.log('Adding more placeholder undefined pieces.');
         
-        pieces.forEachPieceType(add);
+        typeutil.forEachPieceType(add);
 
         function add(listType) {
             if (!organizedlines.isTypeATypeWereAppendingUndefineds(gamefile, listType)) return;
@@ -190,13 +205,13 @@ const organizedlines = {
      * @returns {boolean} *true* if we need to append placeholders for this type.
      */
     isTypeATypeWereAppendingUndefineds(gamefile, type) {
-        if (!gamefile.gameRules.promotionsAllowed) throw new Error("promotionsAllowed needs to be defined before appending undefineds to the piece lists!");
+        if (!gamefile.gameRules.promotionsAllowed) return false; // No pieces can promote, definitely not appending undefineds to this piece.
 
-        const color = math.getPieceColorFromType(type);
+        const color = colorutil.getPieceColorFromType(type);
 
         if (!gamefile.gameRules.promotionsAllowed[color]) return false; // Eliminates neutral pieces.
         
-        const trimmedType = math.trimWorBFromType(type);
+        const trimmedType = colorutil.trimColorExtensionFromType(type);
         return gamefile.gameRules.promotionsAllowed[color].includes(trimmedType); // Eliminates all pieces that can't be promoted to
     },
 
@@ -212,7 +227,7 @@ const organizedlines = {
         gamefileutility.forEachPieceInPiecesByType(callback, state);
 
         function callback(type, coords) {
-            const key = math.getKeyFromCoords(coords);
+            const key = coordutil.getKeyFromCoords(coords);
             keyList[key] = type;
         }
 
@@ -230,7 +245,7 @@ const organizedlines = {
         // For some reason, does not iterate through inherited properties?
         for (const key in keyList) {
             const type = keyList[key];
-            const coords = math.getCoordsFromKey(key);
+            const coords = coordutil.getCoordsFromKey(key);
             // Does the type parameter exist?
             // if (!state[type]) state[type] = []
             if (!state[type]) return console.error(`Error when building state from key list. Type ${type} is undefined!`);
@@ -246,13 +261,13 @@ const organizedlines = {
         const state = {};
 
         // White and Black
-        for (let i = 0; i < pieces.white.length; i++) {
-            state[pieces.white[i]] = [];
-            state[pieces.black[i]] = [];
+        for (let i = 0; i < typeutil.colorsTypes.white.length; i++) {
+            state[typeutil.colorsTypes.white[i]] = [];
+            state[typeutil.colorsTypes.black[i]] = [];
         }
         // Neutral
-        for (let i = 0; i < pieces.neutral.length; i++) {
-            state[pieces.neutral[i]] = [];
+        for (let i = 0; i < typeutil.colorsTypes.neutral.length; i++) {
+            state[typeutil.colorsTypes.neutral[i]] = [];
         }
 
         return state;
@@ -346,3 +361,5 @@ const organizedlines = {
         return false;
     }
 };
+
+export default organizedlines;

@@ -1,10 +1,20 @@
 
-/**
- * This script handles the calculation of the "Area"s on screen that
- * will contain the desired list of piece coordinates when at a specific
- * camera position and scale (zoom), which can be used to tell
- * {@link transition} where to teleport to.
- */
+// Import Start
+import transition from './transition.js';
+import movement from './movement.js';
+import camera from './camera.js';
+import board from './board.js';
+import gamefileutility from '../chess/gamefileutility.js';
+import math from '../misc/math.js';
+import jsutil from '../misc/jsutil.js';
+import space from '../misc/space.js';
+// Import End
+
+/** 
+ * Type Definitions 
+ * @typedef {import('../chess/gamefile.js').gamefile} gamefile
+ * @typedef {import('../misc/math.js').BoundingBox} BoundingBox
+*/
 
 "use strict";
 
@@ -17,6 +27,12 @@
  * @property {Object} boundingBox - The bounding box that contains the area of interest.
  */
 
+/**
+ * This script handles the calculation of the "Area"s on screen that
+ * will contain the desired list of piece coordinates when at a specific
+ * camera position and scale (zoom), which can be used to tell
+ * {@link transition} where to teleport to.
+ */
 const area = (function() {
 
     const padding = 0.03; // As a percentage of the screen WIDTH/HEIGHT (subtract the navigation bars height)
@@ -64,7 +80,7 @@ const area = (function() {
      */
     function applyPaddingToBox(box) { // { left, right, bottom, top }
         if (!box) { console.error("Cannot apply padding to an undefined box."); return box; }
-        const boxCopy = math.deepCopyObject(box);
+        const boxCopy = jsutil.deepCopyObject(box);
         
         const topNavHeight = camera.getPIXEL_HEIGHT_OF_TOP_NAV();
         const bottomNavHeight = camera.getPIXEL_HEIGHT_OF_BOTTOM_NAV();
@@ -80,7 +96,7 @@ const area = (function() {
 
         /** Start with a copy with zero padding.
          * @type {BoundingBox} */
-        let paddedBox = math.deepCopyObject(boxCopy);
+        let paddedBox = jsutil.deepCopyObject(boxCopy);
         let scale = calcScaleToMatchSides(paddedBox);
 
         // Iterate until we have desired padding
@@ -91,8 +107,8 @@ const area = (function() {
             const paddingHorzPixels = camera.getCanvasWidthVirtualPixels() * paddingToUse;
             const paddingVertPixels = canvasHeightVirtualSubNav * paddingToUse + bottomNavHeight;
 
-            const paddingHorzWorld = math.convertPixelsToWorldSpace_Virtual(paddingHorzPixels);
-            const paddingVertWorld = math.convertPixelsToWorldSpace_Virtual(paddingVertPixels);
+            const paddingHorzWorld = space.convertPixelsToWorldSpace_Virtual(paddingHorzPixels);
+            const paddingVertWorld = space.convertPixelsToWorldSpace_Virtual(paddingVertPixels);
             const paddingHorz = paddingHorzWorld / scale;
             const paddingVert = paddingVertWorld / scale;
 
@@ -127,7 +143,7 @@ const area = (function() {
         // Now maximize the bounding box to fill entire screen when at position and scale, so that
         // we don't have long thin slices of a bounding box that will fail the math.boxContainsSquare() function EVEN
         // if the square is visible on screen!
-        box = math.getBoundingBoxOfBoard(newBoardPos, newScale, camera.getScreenBoundingBox());
+        box = board.getBoundingBoxOfBoard(newBoardPos, newScale, camera.getScreenBoundingBox());
         math;
         // PROBLEM WITH this enabled is since it changes the size of the boundingBox, new coords are not centered.
 
@@ -268,3 +284,5 @@ const area = (function() {
     });
 
 })();
+
+export default area;

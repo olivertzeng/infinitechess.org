@@ -1,15 +1,36 @@
 
-// This script handles and stores the matrixes of our shader programs, which
-// store the location of the camera, and contains data about our canvas and window.
-// Note that our camera is going to be at a FIXED location no matter what our board
-// location is or our scale is, the camera remains still while the board moves beneath us.
+// Import Start
+import perspective from './perspective.js';
+import miniimage from './miniimage.js';
+import game from '../chess/game.js';
+import stats from '../gui/stats.js';
+import options from './options.js';
+import mat4 from './gl-matrix.js';
+import { gl } from './webgl.js';
+import shaders from './shaders.js';
+import guidrawoffer from '../gui/guidrawoffer.js';
+import jsutil from '../misc/jsutil.js';
+import frametracker from './frametracker.js';
+// Import End
 
-// viewMatrix  is the camera location and rotation.
-// projMatrix  needed for perspective mode rendering (is even enabled in 2D view).
-// worldMatrix  is custom for each rendered object, translating it how desired.
+/**
+ * Type Definitions
+ * @typedef {import('../misc/math.js').BoundingBox} BoundingBox
+ * @typedef {import('./shaders.js').ShaderProgram} ShaderProgram
+ */
 
 "use strict";
 
+/**
+ * This script handles and stores the matrixes of our shader programs, which
+ * store the location of the camera, and contains data about our canvas and window.
+ * Note that our camera is going to be at a FIXED location no matter what our board
+ * location is or our scale is, the camera remains still while the board moves beneath us.
+ * 
+ * viewMatrix  is the camera location and rotation.
+ * projMatrix  needed for perspective mode rendering (is even enabled in 2D view).
+ * worldMatrix  is custom for each rendered object, translating it how desired.
+ */
 const camera = (function() {
     
     // This will NEVER change! The camera stays while the board position is what moves!
@@ -63,7 +84,7 @@ const camera = (function() {
 
     // Returns devMode-sensitive camera position.
     function getPosition(ignoreDevmode) {
-        return math.deepCopyObject(!ignoreDevmode && options.isDebugModeOn() ? position_devMode : position);
+        return jsutil.deepCopyObject(!ignoreDevmode && options.isDebugModeOn() ? position_devMode : position);
     }
 
     function getZFar() {
@@ -96,7 +117,7 @@ const camera = (function() {
     }
 
     function getCanvasRect() {
-        return math.deepCopyObject(canvasRect);
+        return jsutil.deepCopyObject(canvasRect);
     }
 
     // Returns the bounding box of the screen in world-space, NOT tile/board space.
@@ -108,7 +129,7 @@ const camera = (function() {
      * @returns {BoundingBox} The bounding box of the screen
      */
     function getScreenBoundingBox(devMode) {
-        return math.deepCopyObject(devMode ? screenBoundingBox_devMode : screenBoundingBox);
+        return jsutil.deepCopyObject(devMode ? screenBoundingBox_devMode : screenBoundingBox);
     }
 
     /**
@@ -116,7 +137,7 @@ const camera = (function() {
      * @returns {Float32Array} The view matrix
      */
     function getViewMatrix() {
-        return math.copyFloat32Array(viewMatrix);
+        return jsutil.copyFloat32Array(viewMatrix);
     }
 
     // Initiates the matrixes (uniforms) of our shader programs: viewMatrix (Camera), projMatrix (Projection), worldMatrix (world translation)
@@ -169,7 +190,7 @@ const camera = (function() {
                                        : window.innerWidth > 368 ? 66
                                                                  : window.innerWidth * 0.179;
         PIXEL_HEIGHT_OF_BOTTOM_NAV = !options.gnavigationVisible() ? 0 : 84;
-        main.renderThisFrame();
+        frametracker.onVisualChange();
 
         stats.updateStatsCSS();
     }
@@ -271,7 +292,7 @@ const camera = (function() {
     function onScreenResize() {
         initPerspective(); // The projection matrix needs to be recalculated every screen resize
         perspective.initCrosshairModel();
-        main.renderThisFrame(); // Visual change. Render the screen this frame.
+        frametracker.onVisualChange(); // Visual change. Render the screen this frame.
         guidrawoffer.updateVisibilityOfNamesAndClocksWithDrawOffer(); // Hide the names and clocks depending on if the draw offer UI is cramped
         // console.log('Resized window.')
     }
@@ -303,3 +324,5 @@ const camera = (function() {
     });
 
 })();
+
+export default camera;

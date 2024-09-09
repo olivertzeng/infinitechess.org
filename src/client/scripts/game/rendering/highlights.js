@@ -1,9 +1,37 @@
 
-// This script handles the rendering of legal jumping (no sliding) moves,
-// and also hilights the last move played.
+// Import Start
+import bufferdata from './bufferdata.js';
+import perspective from './perspective.js';
+import checkhighlight from './checkhighlight.js';
+import arrows from './arrows.js';
+import organizedlines from '../chess/organizedlines.js';
+import movement from './movement.js';
+import options from './options.js';
+import selection from '../chess/selection.js';
+import camera from './camera.js';
+import board from './board.js';
+import math from '../misc/math.js';
+import movesscript from '../chess/movesscript.js';
+import game from '../chess/game.js';
+import buffermodel from './buffermodel.js';
+import jsutil from '../misc/jsutil.js';
+import coordutil from '../misc/coordutil.js';
+import frametracker from './frametracker.js';
+// Import End
+
+/**
+ * Type Definitions
+ * @typedef {import('./legalmoves.js').LegalMoves} LegalMoves
+ * @typedef {import('./buffermodel.js').BufferModel} BufferModel
+ * @typedef {import('../misc/math.js').BoundingBox} BoundingBox
+ */
 
 "use strict";
 
+/**
+ * This script handles the rendering of legal jumping (no sliding) moves,
+ * and also hilights the last move played.
+ */
 const highlights = (function() {
 
     const highlightedMovesRegenRange = 10_000; // Not every highlighted move can be calculated every frame because it's infinite. So we render them out to a specified distance. This is NOT that specified distance. This is the distance to at which to call the function to recalculate the model of the highlighted moves (the out-of-bounds)
@@ -62,8 +90,8 @@ const highlights = (function() {
     // Regenerates the model for all highlighted squares. Expensive, minimize calling this.
     function regenModel() {
         if (!selection.isAPieceSelected()) return;
-        main.renderThisFrame();
-        console.log("Regenerating legal moves model..");
+        frametracker.onVisualChange();
+        // console.log("Regenerating legal moves model..");
 
         updateOffsetAndBoundingBoxOfRenderRange();
 
@@ -94,10 +122,10 @@ const highlights = (function() {
     function updateOffsetAndBoundingBoxOfRenderRange() {
         let changeMade = false;
 
-        const oldOffset = math.deepCopyObject(model_Offset);
+        const oldOffset = jsutil.deepCopyObject(model_Offset);
         // This is the range at which we will always regen this model. Prevents gittering.
         model_Offset = math.roundPointToNearestGridpoint(movement.getBoardPos(), highlightedMovesRegenRange);
-        if (!math.areCoordsEqual(oldOffset, model_Offset)) changeMade = true;
+        if (!coordutil.areCoordsEqual(oldOffset, model_Offset)) changeMade = true;
 
         // Used to limit the data/highlights of infinitely sliding moves to the area on your screen.
         if (isRenderRangeBoundingBoxOutOfRange()) {
@@ -242,7 +270,7 @@ const highlights = (function() {
         const vertexData = bufferdata.getDataQuad_Color3D_FromCoord_WithOffset(model_Offset, coords, z, color); // Square / dot highlighting 1 legal move
 
         for (const strline of lineSet) {
-            const line = math.getCoordsFromKey(strline); // [dx,dy]
+            const line = coordutil.getCoordsFromKey(strline); // [dx,dy]
             const C = organizedlines.getCFromLine(line, coords);
 
             const corner1 = math.getAABBCornerOfLine(line, true); // "right"
@@ -270,11 +298,11 @@ const highlights = (function() {
     function concatData_HighlightedMoves_Diagonal(data, coords, step, intsect1Tile, intsect2Tile, limits, vertexData) {
         
         // Right moveset
-        concatData_HighlightedMoves_Diagonal_Split(data, coords, step, intsect1Tile, intsect2Tile, limits[1], math.deepCopyObject(vertexData));
+        concatData_HighlightedMoves_Diagonal_Split(data, coords, step, intsect1Tile, intsect2Tile, limits[1], jsutil.deepCopyObject(vertexData));
         
         // Left moveset
         const negStep = [step[0] * -1, step[1] * -1];
-        concatData_HighlightedMoves_Diagonal_Split(data, coords, negStep, intsect1Tile, intsect2Tile, Math.abs(limits[0]), math.deepCopyObject(vertexData));
+        concatData_HighlightedMoves_Diagonal_Split(data, coords, negStep, intsect1Tile, intsect2Tile, Math.abs(limits[0]), jsutil.deepCopyObject(vertexData));
     }
 
     /**
@@ -409,3 +437,5 @@ const highlights = (function() {
     });
 
 })();
+
+export default highlights;

@@ -1,9 +1,29 @@
 
-// This script handles the smooth animation when moving a piece from one coord to another
-// Also plays our sounds!
+// Import Start
+import bufferdata from './bufferdata.js';
+import sound from '../misc/sound.js';
+import movement from './movement.js';
+import options from './options.js';
+import board from './board.js';
+import pieces from './pieces.js';
+import math from '../misc/math.js';
+import perspective from './perspective.js';
+import buffermodel from './buffermodel.js';
+import frametracker from './frametracker.js';
+// Import End
+
+/**
+ * Type Definitions
+ * @typedef {import('../chess/movesscript.js').Move} Move
+ * @typedef {import('./buffermodel.js').BufferModel} BufferModel
+ */
 
 "use strict";
 
+/**
+ * This script handles the smooth animation when moving a piece from one coord to another
+ * Also plays our sounds!
+ */
 const animation = (function() {
 
     const z = 0.01;
@@ -87,8 +107,7 @@ const animation = (function() {
     function update() {
         if (animations.length === 0) return;
 
-        main.renderThisFrame();
-        // main.enableForceRender()
+        frametracker.onVisualChange();
 
         for (let i = animations.length - 1; i >= 0; i--) {
             const thisAnimation = animations[i];
@@ -255,3 +274,5 @@ const animation = (function() {
         getDurationMillisOfMoveAnimation
     });
 })();
+
+export default animation;

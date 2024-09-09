@@ -1,12 +1,22 @@
 
-/*
- * This script handles the game info bar, during a game,
- * displaying the clocks, and whos turn it currently is.
- */
+// Import Start
+import style from './style.js';
+import game from '../chess/game.js';
+import onlinegame from '../misc/onlinegame.js';
+import winconutil from '../misc/winconutil.js';
+// Import End
+
+/** 
+ * Type Definitions 
+ * @typedef {import('../chess/gamefile.js').gamefile} gamefile
+*/
 
 "use strict";
 
-// eslint-disable-next-line no-unused-vars
+/**
+ * This script handles the game info bar, during a game,
+ * displaying the clocks, and whos turn it currently is.
+ */
 const guigameinfo = (function() {
 
     // Variables
@@ -74,7 +84,7 @@ const guigameinfo = (function() {
     function gameEnd(conclusion) {
         // 'white checkmate' / 'black resignation' / 'draw stalemate'  time/resignation/stalemate/repetition/checkmate/disconnect/agreement
 
-        const { victor, condition } = wincondition.getVictorAndConditionFromGameConclusion(conclusion);
+        const { victor, condition } = winconutil.getVictorAndConditionFromGameConclusion(conclusion);
 	    const resultTranslations = translations.results;
         style.hideElement(element_dot);
 
@@ -149,3 +159,5 @@ const guigameinfo = (function() {
     });
 
 })();
+
+export default guigameinfo;

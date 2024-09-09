@@ -2,6 +2,23 @@
 // This contains methods for working with the gamefile's moves list,
 // and detects if we're rewinding or fast-forwarding to view the game's history.
 
+// Import Start
+import movepiece from './movepiece.js';
+import stats from '../gui/stats.js';
+import guinavigation from '../gui/guinavigation.js';
+import selection from './selection.js';
+import input from '../input.js';
+import statustext from '../gui/statustext.js';
+import game from './game.js';
+import frametracker from '../rendering/frametracker.js';
+// Import End
+
+/** 
+ * Type Definitions 
+ * @typedef {import('./gamefile.js').gamefile} gamefile
+*/
+
+
 "use strict";
 
 // Custom type definitions...
@@ -53,6 +70,10 @@ function Move() {
     this.compact = undefined;
 }
 
+/**
+ * This contains methods for working with the gamefile's moves list,
+ * and detects if we're rewinding or fast-forwarding to view the game's history.
+ */
 const movesscript = (function() {
 
     /** Tests if the arrow keys have been pressed, signaling to rewind/forward the game. */
@@ -79,7 +100,7 @@ const movesscript = (function() {
         if (game.getGamefile().mesh.locked) return statustext.pleaseWaitForTask();
         if (!isDecrementingLegal(game.getGamefile())) return stats.showMoves();
 
-        main.renderThisFrame();
+        frametracker.onVisualChange();
 
         movepiece.rewindMove(game.getGamefile(), { removeMove: false });
         
@@ -232,7 +253,7 @@ const movesscript = (function() {
      */
     function hasPieceMoved(gamefile, coords) {
         for (const thisMove of gamefile.moves) {
-            if (math.areCoordsEqual(thisMove.endCoords, coords)) return true;
+            if (coordutil.areCoordsEqual(thisMove.endCoords, coords)) return true;
         }
         return false;
     }
@@ -374,3 +395,6 @@ const movesscript = (function() {
     });
 
 })();
+
+export { Move };
+export default movesscript;

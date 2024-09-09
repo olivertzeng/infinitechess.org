@@ -1,9 +1,43 @@
 
-// This module keeps trap of the data of the onlinegame we are currently in.
+// Import Start
+import legalmoves from '../chess/legalmoves.js';
+import localstorage from './localstorage.js';
+import gamefileutility from '../chess/gamefileutility.js';
+import guinavigation from '../gui/guinavigation.js';
+import drawoffers from './drawoffers.js';
+import guititle from '../gui/guititle.js';
+import clock from './clock.js';
+import statustext from '../gui/statustext.js';
+import movepiece from '../chess/movepiece.js';
+import game from '../chess/game.js';
+import specialdetect from '../chess/specialdetect.js';
+import selection from '../chess/selection.js';
+import board from '../rendering/board.js';
+import movesscript from '../chess/movesscript.js';
+import websocket from '../websocket.js';
+import perspective from '../rendering/perspective.js';
+import sound from './sound.js';
+import guiplay from '../gui/guiplay.js';
+import input from '../input.js';
+import loadbalancer from './loadbalancer.js';
+import formatconverter from '../chess/formatconverter.js';
+import guipause from '../gui/guipause.js';
+import guigameinfo from '../gui/guigameinfo.js';
+import colorutil from './colorutil.js';
+import jsutil from './jsutil.js';
+import config from '../config.js';
+// Import End
+
+/** 
+ * Type Definitions 
+ * @typedef {import('../chess/gamefile.js').gamefile} gamefile
+ * @typedef {import('../chess/movesscript.js').Move} Move
+ * @typedef {import('../websocket.js').WebsocketMessage} WebsocketMessage
+*/
 
 "use strict";
 
-// eslint-disable-next-line no-unused-vars
+/** This module keeps trap of the data of the onlinegame we are currently in. */
 const onlinegame = (function() {
 
     /** Whether we are currently in an online game. */
@@ -378,7 +412,7 @@ const onlinegame = (function() {
 
         const piecemoved = gamefileutility.getPieceAtCoords(gamefile, move.startCoords);
         const legalMoves = legalmoves.calculate(gamefile, piecemoved);
-        const endCoordsToAppendSpecial = math.deepCopyObject(move.endCoords);
+        const endCoordsToAppendSpecial = jsutil.deepCopyObject(move.endCoords);
         legalmoves.checkIfMoveLegal(legalMoves, move.startCoords, endCoordsToAppendSpecial); // Passes on any special moves flags to the endCoords
 
         move.type = piecemoved.type;
@@ -646,7 +680,7 @@ const onlinegame = (function() {
 
     function sendMove() {
         if (!inOnlineGame || !inSync) return; // Don't do anything if it's a local game
-        if (main.devBuild) console.log("Sending our move..");
+        if (config.DEV_BUILD) console.log("Sending our move..");
 
         const gamefile = game.getGamefile();
 
@@ -696,7 +730,7 @@ const onlinegame = (function() {
     }
 
     function getOpponentColor() {
-        return math.getOppositeColor(ourColor);
+        return colorutil.getOppositeColor(ourColor);
     }
 
     /**
@@ -806,3 +840,5 @@ const onlinegame = (function() {
     });
 
 })();
+
+export default onlinegame;

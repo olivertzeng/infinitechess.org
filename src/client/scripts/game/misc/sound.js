@@ -1,7 +1,11 @@
-// This script controls the playing of our sound effects
+
+// Import Start
+import thread from './thread.js';
+// Import End
 
 "use strict";
 
+/** This script controls the playing of our sound effects. */
 const sound = (function() {
 
     /** The timestamps where each game sound effect starts and ends inside our sound spritesheet. */
@@ -303,7 +307,7 @@ const sound = (function() {
         if (timeSinceLastMoveSoundPlayed >= millisBetwMoveSounds) return;
 
         const timeLeft = millisBetwMoveSounds - timeSinceLastMoveSoundPlayed;
-        await main.sleep(timeLeft);
+        await thread.sleep(timeLeft);
     }
 
     function playSound_capture(distanceMoved, dampen) {
@@ -413,3 +417,8 @@ const sound = (function() {
     });
 
 })();
+
+// We set this variable on the global object so that htmlscript can access them within the html document.
+globalThis.sound = sound;
+
+export default sound;

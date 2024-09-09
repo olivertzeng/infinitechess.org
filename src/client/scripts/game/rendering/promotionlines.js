@@ -1,8 +1,19 @@
-// This script handles the rendering of our promotion lines
+
+// Import Start
+import board from './board.js';
+import game from '../chess/game.js';
+import movement from './movement.js';
+import buffermodel from './buffermodel.js';
+// Import End
+
+/**
+ * Type Definitions
+ * @typedef {import('./buffermodel.js').BufferModel} BufferModel
+ */
 
 "use strict";
 
-// Module
+/** This script handles the rendering of our promotion lines. */
 const promotionlines = {
 
     startEnd: [-3, 12],
@@ -67,3 +78,5 @@ const promotionlines = {
         return buffermodel.createModel_Colored(data, 2, "TRIANGLES");
     }
 };
+
+export default promotionlines;

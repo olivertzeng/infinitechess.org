@@ -1,12 +1,21 @@
 
+// Import Start
+import movesscript from '../chess/movesscript.js';
+import style from './style.js';
+import options from '../rendering/options.js';
+import camera from '../rendering/camera.js';
+import game from '../chess/game.js';
+import math from '../misc/math.js';
+import config from '../config.js';
+// Import End
+
+"use strict";
+
+
 /**
  * This script renders the statis in the corner of the screen.
  * (Similar to Minecraft's f3 menu)
  */
-
-"use strict";
-
-// Module
 const stats = {
     element_Statuses: document.getElementById('stats'),
 
@@ -28,7 +37,7 @@ const stats = {
      * @param {number} [durationSecs] The duration to show the move number. Default: 2.5
      */
     showMoves(durationSecs = 2.5) {
-        if (main.videoMode) return;
+        if (config.VIDEO_MODE) return;
 
         stats.visibilityWeight++;
 
@@ -56,7 +65,7 @@ const stats = {
     },
 
     showPiecesMesh() {
-        if (main.videoMode) return;
+        if (config.VIDEO_MODE) return;
         style.revealElement(stats.elementStatusPiecesMesh);
     },
 
@@ -70,7 +79,7 @@ const stats = {
     },
 
     showFPS() {
-        if (main.videoMode) return;
+        if (config.VIDEO_MODE) return;
         style.revealElement(stats.elementStatusFPS);
     },
 
@@ -85,7 +94,7 @@ const stats = {
     },
 
     showRotateMesh() {
-        if (main.videoMode) return;
+        if (config.VIDEO_MODE) return;
         style.revealElement(stats.elementStatusRotateMesh);
     },
 
@@ -100,7 +109,7 @@ const stats = {
 
     // NO LONGER USED. These were for the aynchronious checkmate algorithm.
     // showMoveLooking() {
-    //     if (main.videoMode) return;
+    //     if (config.VIDEO_MODE) return;
     //     style.revealElement(stats.elementStatusMoveLooking);
     // },
     // updateMoveLooking(percent) {
@@ -113,3 +122,5 @@ const stats = {
         style.hideElement(stats.elementStatusMoveLooking);
     }
 };
+
+export default stats;

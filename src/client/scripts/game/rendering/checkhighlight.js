@@ -1,10 +1,24 @@
-/*
- * This script renders the red glow surrounding
- * royal pieces currently in check.
+
+// Import Start
+import bufferdata from './bufferdata.js';
+import game from '../chess/game.js';
+import movement from './movement.js';
+import options from './options.js';
+import buffermodel from './buffermodel.js';
+import space from '../misc/space.js';
+// Import End
+
+/**
+ * Type Definitions
+ * @typedef {import('./buffermodel.js').BufferModel} BufferModel
  */
 
 "use strict";
 
+/**
+ * This script renders the red glow surrounding
+ * royal pieces currently in check.
+ */
 const checkhighlight = (function() {
 
     function render() {
@@ -33,7 +47,7 @@ const checkhighlight = (function() {
 
             // This currently doesn't work for squareCenters other than 0.5. I will need to add + 0.5 - board.gsquareCenter()
             // Create a math function for returning the world-space point of the CENTER of the provided coordinate!
-            const worldSpaceCoord = math.convertCoordToWorldSpace(thisRoyalInCheckCoords);
+            const worldSpaceCoord = space.convertCoordToWorldSpace(thisRoyalInCheckCoords);
             const x = worldSpaceCoord[0];
             const y = worldSpaceCoord[1];
             const outRad = 0.65 * movement.getBoardScale();
@@ -54,3 +68,5 @@ const checkhighlight = (function() {
     });
 
 })();
+
+export default checkhighlight;

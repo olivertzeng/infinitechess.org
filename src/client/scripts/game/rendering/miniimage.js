@@ -1,7 +1,31 @@
-// This script handles the rendering of the mini images of our pieces when we're zoomed out
+
+// Import Start
+import webgl from './webgl.js';
+import input from '../input.js';
+import perspective from './perspective.js';
+import bufferdata from './bufferdata.js';
+import transition from './transition.js';
+import movement from './movement.js';
+import options from './options.js';
+import pieces from './pieces.js';
+import statustext from '../gui/statustext.js';
+import buffermodel from './buffermodel.js';
+import game from '../chess/game.js';
+import area from './area.js';
+import typeutil from '../misc/typeutil.js';
+import space from '../misc/space.js';
+import frametracker from './frametracker.js';
+// Import End
+
+/**
+ * Type Definitions
+ * @typedef {import('./buffermodel.js').BufferModel} BufferModel
+ */
 
 "use strict";
 
+/** This script handles the rendering of the mini images of our pieces when we're zoomed out
+ */
 const miniimage = (function() {
 
     const width = 36; // Default: 36. Width of ghost-pieces when zoomed out, in virtual pixels
@@ -27,7 +51,7 @@ const miniimage = (function() {
     // Call after screen resize
     function recalcWidthWorld() {
         // Convert width to world-space
-        widthWorld = math.convertPixelsToWorldSpace_Virtual(width);
+        widthWorld = space.convertPixelsToWorldSpace_Virtual(width);
     }
 
     function gopacity() {
@@ -56,7 +80,7 @@ const miniimage = (function() {
         // Toggled
         
         disabled = !disabled;
-        main.renderThisFrame();
+        frametracker.onVisualChange();
 
         if (disabled) statustext.showStatus(translations.rendering.icon_rendering_off);
         else statustext.showStatus(translations.rendering.icon_rendering_on);
@@ -88,7 +112,7 @@ const miniimage = (function() {
         // While we're iterating, test to see if mouse is hovering over, if so, make opacity 100%
         // We know the board coordinates of the pieces.. what is the world-space coordinates of the mouse? input.getMouseWorldLocation()
 
-        pieces.forEachPieceType(concatBufferData, { ignoreVoids: true });
+        typeutil.forEachPieceType(concatBufferData, { ignoreVoids: true });
         
         // Adds pieces of that type's buffer to the overall data
         function concatBufferData(pieceType) {
@@ -182,3 +206,5 @@ const miniimage = (function() {
     });
 
 })();
+
+export default miniimage;

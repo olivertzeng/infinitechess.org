@@ -1,11 +1,16 @@
 
-/*
- * This script handles our promotion menu, when
- * pawns reach the promotion line.
- */
+// Import Start
+import perspective from '../rendering/perspective.js';
+import selection from '../chess/selection.js';
+import style from './style.js';
+// Import End
 
 "use strict";
 
+/**
+ * This script handles our promotion menu, when
+ * pawns reach the promotion line.
+ */
 const guipromotion = (function() {
 
     // Variables
@@ -148,6 +153,7 @@ const guipromotion = (function() {
      * It contains 2 properties, `white` and `black`, both of which are arrays which may look like `['queens', 'bishops']`.
      */
     function initUI(promotionsAllowed) { // {  }
+        promotionsAllowed = promotionsAllowed || { white: [], black: [] };
         const white = promotionsAllowed.white; // ['queens','bishops']
         const black = promotionsAllowed.black;
 
@@ -200,3 +206,5 @@ const guipromotion = (function() {
     });
 
 })();
+
+export default guipromotion;

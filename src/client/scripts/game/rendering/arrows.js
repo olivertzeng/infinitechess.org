@@ -1,8 +1,41 @@
-// This script handles the rendering of arrows poointing to pieces off-screen
-// and detects if they are clicked
+
+// Import Start
+import legalmoves from '../chess/legalmoves.js';
+import input from '../input.js';
+import highlights from './highlights.js';
+import onlinegame from '../misc/onlinegame.js';
+import bufferdata from './bufferdata.js';
+import perspective from './perspective.js';
+import gamefileutility from '../chess/gamefileutility.js';
+import game from '../chess/game.js';
+import transition from './transition.js';
+import organizedlines from '../chess/organizedlines.js';
+import movement from './movement.js';
+import options from './options.js';
+import selection from '../chess/selection.js';
+import camera from './camera.js';
+import board from './board.js';
+import math from '../misc/math.js';
+import pieces from './pieces.js';
+import movesscript from '../chess/movesscript.js';
+import buffermodel from './buffermodel.js';
+import colorutil from '../misc/colorutil.js';
+import jsutil from '../misc/jsutil.js';
+import coordutil from '../misc/coordutil.js';
+import space from '../misc/space.js';
+// Import End
+
+/**
+ * Type Definitions
+ * @typedef {import('./buffermodel.js').BufferModel} BufferModel
+ */
 
 "use strict";
 
+/**
+ * This script handles the rendering of arrows poointing to pieces off-screen
+ * and detects if they are clicked
+ */
 const arrows = (function() {
 
     /** The width of the mini images of the pieces and arrows, in percentage of 1 tile. */
@@ -87,14 +120,14 @@ const arrows = (function() {
         // How do we find out what pieces are off-screen?
 
         // If any part of the square is on screen, this box rounds to it.
-        const boundingBox = perspective.getEnabled() ? math.generatePerspectiveBoundingBox(perspectiveDist + 1) : board.gboundingBox(); 
+        const boundingBox = perspective.getEnabled() ? board.generatePerspectiveBoundingBox(perspectiveDist + 1) : board.gboundingBox(); 
         // Same as above, but doesn't round
-        const boundingBoxFloat = perspective.getEnabled() ? math.generatePerspectiveBoundingBox(perspectiveDist) : board.gboundingBoxFloat(); 
+        const boundingBoxFloat = perspective.getEnabled() ? board.generatePerspectiveBoundingBox(perspectiveDist) : board.gboundingBoxFloat(); 
 
         const slideArrows = {};
 
-        let headerPad = perspective.getEnabled() ? 0 : math.convertPixelsToWorldSpace_Virtual(camera.getPIXEL_HEIGHT_OF_TOP_NAV());
-        let footerPad = perspective.getEnabled() ? 0 : math.convertPixelsToWorldSpace_Virtual(camera.getPIXEL_HEIGHT_OF_BOTTOM_NAV());
+        let headerPad = perspective.getEnabled() ? 0 : space.convertPixelsToWorldSpace_Virtual(camera.getPIXEL_HEIGHT_OF_TOP_NAV());
+        let footerPad = perspective.getEnabled() ? 0 : space.convertPixelsToWorldSpace_Virtual(camera.getPIXEL_HEIGHT_OF_BOTTOM_NAV());
 
         // Reverse header and footer pads if we're viewing blacks side
         if (perspective.getIsViewingBlackPerspective() && !perspective.getEnabled()) {
@@ -103,10 +136,10 @@ const arrows = (function() {
             footerPad = a;
         }
 
-        const paddedBoundingBox = math.deepCopyObject(boundingBoxFloat);
+        const paddedBoundingBox = jsutil.deepCopyObject(boundingBoxFloat);
         if (!perspective.getEnabled()) {
-            paddedBoundingBox.top -= math.convertWorldSpaceToGrid(headerPad);
-            paddedBoundingBox.bottom += math.convertWorldSpaceToGrid(footerPad);
+            paddedBoundingBox.top -= space.convertWorldSpaceToGrid(headerPad);
+            paddedBoundingBox.bottom += space.convertWorldSpaceToGrid(footerPad);
         }
 
         const gamefile = game.getGamefile();
@@ -114,7 +147,7 @@ const arrows = (function() {
 
         for (const line of slides) {
             const perpendicular = [-line[1], line[0]];
-            const linestr = math.getKeyFromCoords(line);
+            const linestr = coordutil.getKeyFromCoords(line);
             
             let boardCornerLeft = math.getAABBCornerOfLine(perpendicular,true);
             let boardCornerRight = math.getAABBCornerOfLine(perpendicular,false);
@@ -132,7 +165,7 @@ const arrows = (function() {
                 if (boardSlidesStart > intsects[0] || boardSlidesEnd < intsects[0]) continue;
                 const pieces = calcPiecesOffScreen(line, gamefile.piecesOrganizedByLines[linestr][key]);
 
-                if (math.isEmpty(pieces)) continue;
+                if (jsutil.isEmpty(pieces)) continue;
 
                 if (!slideArrows[linestr]) slideArrows[linestr] = {};
                 
@@ -194,7 +227,7 @@ const arrows = (function() {
 
         if (perspective.getEnabled()) padding = 0;
         for (const strline in slideArrows) {
-            const line = math.getCoordsFromKey(strline);
+            const line = coordutil.getCoordsFromKey(strline);
             iterateThroughDiagLine(slideArrows[strline], line);
         }
 
@@ -219,7 +252,7 @@ const arrows = (function() {
 
         // Iterate through all pieces in piecesHoveredOver, if they aren't being
         // hovered over anymore, delete them. Stop rendering their legal moves. 
-        const piecesHoveringOverThisFrame_Keys = piecesHoveringOverThisFrame.map(rider => math.getKeyFromCoords(rider.coords)); // ['1,2', '3,4']
+        const piecesHoveringOverThisFrame_Keys = piecesHoveringOverThisFrame.map(rider => coordutil.getKeyFromCoords(rider.coords)); // ['1,2', '3,4']
         for (const key of Object.keys(piecesHoveredOver)) {
             if (piecesHoveringOverThisFrame_Keys.includes(key)) continue; // Still being hovered over
             delete piecesHoveredOver[key]; // No longer being hovered over
@@ -258,7 +291,7 @@ const arrows = (function() {
         for (const strline in arrows) {
             if (attacklines.includes(strline)) continue;
             removeTypesWithIncorrectMoveset(arrows[strline],strline);
-            if (math.isEmpty(arrows[strline])) delete arrows[strline];
+            if (jsutil.isEmpty(arrows[strline])) delete arrows[strline];
         }
 
         function removeTypesWithIncorrectMoveset(object, direction) { // horzRight, vertical/diagonalUp
@@ -268,7 +301,7 @@ const arrows = (function() {
                     const type = object[key][side].type;
                     if (!doesTypeHaveMoveset(gamefile, type, direction)) delete object[key][side];
                 }
-                if (math.isEmpty(object[key])) delete object[key];
+                if (jsutil.isEmpty(object[key])) delete object[key];
             }
         }
 
@@ -283,7 +316,7 @@ const arrows = (function() {
         const worldHalfWidth = worldWidth / 2;
 
         // Convert to world-space
-        const worldCoords = math.convertCoordToWorldSpace(renderCoords);
+        const worldCoords = space.convertCoordToWorldSpace(renderCoords);
 
         const rotation = perspective.getIsViewingBlackPerspective() ? -1 : 1;
         const { texStartX, texStartY, texEndX, texEndY } = bufferdata.getTexDataOfType(type, rotation);
@@ -393,7 +426,7 @@ const arrows = (function() {
      */
     function onPieceIndicatorHover(type, pieceCoords, direction) {
         // Check if their legal moves and mesh have already been stored
-        const key = math.getKeyFromCoords(pieceCoords);
+        const key = coordutil.getKeyFromCoords(pieceCoords);
         if (key in piecesHoveredOver) return; // Legal moves and mesh already calculated.
 
         // Calculate their legal moves and mesh!
@@ -404,8 +437,8 @@ const arrows = (function() {
         // Calculate the mesh...
 
         const data = [];
-        const pieceColor = math.getPieceColorFromType(type);
-        const opponentColor = onlinegame.areInOnlineGame() ? math.getOppositeColor(onlinegame.getOurColor()) : math.getOppositeColor(gamefile.whosTurn);
+        const pieceColor = colorutil.getPieceColorFromType(type);
+        const opponentColor = onlinegame.areInOnlineGame() ? colorutil.getOppositeColor(onlinegame.getOurColor()) : colorutil.getOppositeColor(gamefile.whosTurn);
         const isOpponentPiece = pieceColor === opponentColor;
         const isOurTurn = gamefile.whosTurn === pieceColor;
         const color = options.getLegalMoveHighlightColor({ isOpponentPiece, isPremove: !isOurTurn });
@@ -430,7 +463,7 @@ const arrows = (function() {
         if (!moveset.sliding) return false;
 
         const absoluteDirection = absoluteValueOfDirection(direction); // 'dx,dy'  where dx is always positive
-        const key = math.getKeyFromCoords(absoluteDirection);
+        const key = coordutil.getKeyFromCoords(absoluteDirection);
         return key in moveset.sliding;
     }
 
@@ -462,9 +495,9 @@ const arrows = (function() {
         for (const [key, value] of Object.entries(piecesHoveredOver)) { // 'x,y': { legalMoves, model, color }
             // Skip it if the rider being hovered over IS the piece selected! (Its legal moves are already being rendered)
             if (selection.isAPieceSelected()) {
-                const coords = math.getCoordsFromKey(key);
+                const coords = coordutil.getCoordsFromKey(key);
                 const pieceSelectedCoords = selection.getPieceSelected().coords;
-                if (math.areCoordsEqual(coords, pieceSelectedCoords)) continue; // Skip (already rendering its legal moves, because it's selected)
+                if (coordutil.areCoordsEqual(coords, pieceSelectedCoords)) continue; // Skip (already rendering its legal moves, because it's selected)
             }
             value.model.render(position, scale);
         }
@@ -481,7 +514,7 @@ const arrows = (function() {
         console.log('Updating models of hovered piece\'s legal moves..');
 
         for (const [key, value] of Object.entries(piecesHoveredOver)) { // { legalMoves, model, color }
-            const coords = math.getCoordsFromKey(key);
+            const coords = coordutil.getCoordsFromKey(key);
             // Calculate the mesh...
             const data = [];
             highlights.concatData_HighlightedMoves_Sliding(data, coords, value.legalMoves, value.color);
@@ -513,3 +546,4 @@ const arrows = (function() {
 
 })();
 
+export default arrows;

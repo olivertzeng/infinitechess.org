@@ -1,11 +1,29 @@
 
-/*
- * This script handles copying and pasting games
+/** 
+ * Type Definitions 
+ * @typedef {import('./gamefile.js').gamefile} gamefile
  */
+
+// Import Start
+import onlinegame from '../misc/onlinegame.js';
+import localstorage from '../misc/localstorage.js';
+import formatconverter from './formatconverter.js';
+import game from './game.js';
+import backcompatible from './backcompatible.js';
+import gamefile from './gamefile.js';
+import wincondition from './wincondition.js';
+import gamefileutility from './gamefileutility.js';
+import statustext from '../gui/statustext.js';
+import jsutil from '../misc/jsutil.js';
+import docutil from '../misc/docutil.js';
+import winconutil from '../misc/winconutil.js';
+// Import End
 
 "use strict";
 
-// eslint-disable-next-line no-unused-vars
+/**
+ * This script handles copying and pasting games
+ */
 const copypastegame = (function() {
 
     /** Enable to only copy a single position without all the moves prior */
@@ -31,7 +49,7 @@ const copypastegame = (function() {
         const specifyPosition = !largeGame;
         const shortformat = formatconverter.LongToShort_Format(primedGamefile, { compact_moves: 1, make_new_lines: false, specifyPosition });
           
-        main.copyToClipboard(shortformat);
+        docutil.copyToClipboard(shortformat);
         statustext.showStatus(translations.copypaste.copied_game);
     }
 
@@ -55,7 +73,7 @@ const copypastegame = (function() {
          * gameRules
          */
 
-        const gameRulesCopy = math.deepCopyObject(gamefile.gameRules);
+        const gameRulesCopy = jsutil.deepCopyObject(gamefile.gameRules);
 
         primedGamefile.metadata = gamefile.metadata;
         primedGamefile.metadata.Variant = translations[primedGamefile.metadata.Variant] || primedGamefile.metadata.Variant; // Convert the variant metadata code to spoken language if translation is available
@@ -138,16 +156,15 @@ const copypastegame = (function() {
          * gameRules
          */
 
-        if (!longformat.metadata) longformat.metadata = {};
-        if (!longformat.fullMove) longformat.fullMove = 1;
+        if (!longformat.metadata) throw new Error("formatconvert must specify metadata when copying game.");
+        if (!longformat.fullMove) throw new Error("formatconvert must specify fullMove when copying game.");
         if (!longformat.startingPosition && !longformat.metadata.Variant) { statustext.showStatus(translations.copypaste.game_needs_to_specify, true); return false; }
-        if (longformat.startingPosition && !longformat.specialRights) longformat.specialRights = {};
-        if (!longformat.gameRules) longformat.gameRules = variant.getBareMinimumGameRules();
-        longformat.gameRules.winConditions = longformat.gameRules.winConditions || variant.getDefaultWinConditions();
+        if (longformat.startingPosition && !longformat.specialRights) throw new Error("formatconvert must specify specialRights when copying game, IF startingPosition is provided.");
+        if (!longformat.gameRules) throw new Error("Pasted game doesn't specify gameRules! This is an error of the format converter, it should always return default gameRules if it's not specified in the pasted ICN.");
+        if (!longformat.gameRules.winConditions) throw new Error("Pasted game doesn't specify winConditions! This is an error of the format converter, it should always return default win conditions if it's not specified in the pasted ICN.");
         if (!verifyWinConditions(longformat.gameRules.winConditions)) return false;
-        longformat.gameRules.promotionRanks = longformat.gameRules.promotionRanks || null;
-        longformat.gameRules.promotionsAllowed = longformat.gameRules.promotionsAllowed || { white: [], black: [] };
-        longformat.gameRules.turnOrder = longformat.gameRules.turnOrder || ['white', 'black'];
+        if (longformat.gameRules.promotionRanks && !longformat.gameRules.promotionsAllowed) throw new Error("Pasted game specifies promotion lines, but no promotions allowed! This is an error of the format converter, it should always return default promotions if it's not specified in the pasted ICN.");
+        if (!longformat.gameRules.turnOrder) throw new Error("Pasted game doesn't specify turn order! This is an error of the format converter, it should always return default turn order if it's not specified in the pasted ICN.");
 
         return true;
     }
@@ -156,7 +173,7 @@ const copypastegame = (function() {
     function verifyWinConditions(winConditions) {
         for (let i = 0; i < winConditions.white.length; i++) {
             const winCondition = winConditions.white[i];
-            if (wincondition.validWinConditions.includes(winCondition)) continue;
+            if (winconutil.isWinConditionValid(winCondition)) continue;
             // Not valid
             statustext.showStatus(`${translations.copypaste.invalid_wincon_white} "${winCondition}".`, true);
             return false;
@@ -164,7 +181,7 @@ const copypastegame = (function() {
 
         for (let i = 0; i < winConditions.black.length; i++) {
             const winCondition = winConditions.black[i];
-            if (wincondition.validWinConditions.includes(winCondition)) continue;
+            if (winconutil.isWinConditionValid(winCondition)) continue;
             // Not valid
             statustext.showStatus(`${translations.copypaste.invalid_wincon_black} "${winCondition}".`, true);
             return false;
@@ -257,11 +274,11 @@ const copypastegame = (function() {
             const whiteHasCheckmate = newGamefile.gameRules.winConditions.white.includes('checkmate');
             const blackHasCheckmate = newGamefile.gameRules.winConditions.black.includes('checkmate');
             if (whiteHasCheckmate) {
-                math.removeObjectFromArray(newGamefile.gameRules.winConditions.white, 'checkmate', true);
+                jsutil.removeObjectFromArray(newGamefile.gameRules.winConditions.white, 'checkmate', true);
                 newGamefile.gameRules.winConditions.white.push('royalcapture');
             }
             if (blackHasCheckmate) {
-                math.removeObjectFromArray(newGamefile.gameRules.winConditions.black, 'checkmate', true);
+                jsutil.removeObjectFromArray(newGamefile.gameRules.winConditions.black, 'checkmate', true);
                 newGamefile.gameRules.winConditions.black.push('royalcapture');
             }
         }
@@ -394,10 +411,10 @@ const copypastegame = (function() {
 
     // // Makes sure that with no royal win condition there are no royals of specified color
     // function verifyNoRoyals(piecesOrganizedByType, color) {
-    //     const oppositeColor = math.getOppositeColor(color)
+    //     const oppositeColor = colorutil.getOppositeColor(color)
 
     //     // Check to make sure there is zero royals
-    //     const royalCount = gamefileutility.getCountOfTypesFromPiecesByType(piecesOrganizedByType, pieces.royals, color)
+    //     const royalCount = gamefileutility.getCountOfTypesFromPiecesByType(piecesOrganizedByType, typeutil.royals, color)
     //     if (royalCount > 0) return displayError(`${color.toUpperCase()} does not need royalty for the win conditions ${oppositeColor} has!`);
         
     //     return true;
@@ -405,10 +422,10 @@ const copypastegame = (function() {
 
     // // makes sure that the starting position is valid with checkmate! Exactly 1 jumping royal piece (not sliding)
     // function verifyCheckmate(piecesOrganizedByType, color) {
-    //     const oppositeColor = math.getOppositeColor(color)
+    //     const oppositeColor = colorutil.getOppositeColor(color)
         
     //     // Check to make sure there is exactly 1 jumping royal! (not sliding)
-    //     const jumpingRoyalCount = gamefileutility.getCountOfTypesFromPiecesByType(piecesOrganizedByType, pieces.jumpingRoyals, oppositeColor)
+    //     const jumpingRoyalCount = gamefileutility.getCountOfTypesFromPiecesByType(piecesOrganizedByType, typeutil.jumpingRoyals, oppositeColor)
     //     if (jumpingRoyalCount !== 1) return displayError(`When ${color.toUpperCase()} has a win condition of 'checkmate', ${oppositeColor.toUpperCase()} should have exactly 1 king or royal centuar! Counted: ${jumpingRoyalCount}`)
 
     //     // Also make sure there are no royal queens! We can't calculate checkmate with sliding pieces.
@@ -419,27 +436,27 @@ const copypastegame = (function() {
     // }
 
     // function verifyRoyalcapture(piecesOrganizedByType, color) {
-    //     const oppositeColor = math.getOppositeColor(color)
+    //     const oppositeColor = colorutil.getOppositeColor(color)
 
     //     // Check to make sure there is atleast 1 royal!
-    //     const royalCount = gamefileutility.getCountOfTypesFromPiecesByType(piecesOrganizedByType, pieces.royals, oppositeColor)
+    //     const royalCount = gamefileutility.getCountOfTypesFromPiecesByType(piecesOrganizedByType, typeutil.royals, oppositeColor)
     //     if (royalCount < 1) return displayError(`When ${color.toUpperCase()} has a win condition of 'royalcapture', ${oppositeColor.toUpperCase()} should have atleast 1 royal! Counted: ${royalCount}`)
         
     //     return true;
     // }
 
     // function verifyAllroyalscaptured(piecesOrganizedByType, color) {
-    //     const oppositeColor = math.getOppositeColor(color)
+    //     const oppositeColor = colorutil.getOppositeColor(color)
 
     //     // Check to make sure there is atleast 1 royal!
-    //     const royalCount = gamefileutility.getCountOfTypesFromPiecesByType(piecesOrganizedByType, pieces.royals, oppositeColor)
+    //     const royalCount = gamefileutility.getCountOfTypesFromPiecesByType(piecesOrganizedByType, typeutil.royals, oppositeColor)
     //     if (royalCount < 1) return displayError(`When ${color.toUpperCase()} has a win condition of 'allroyalscaptured', ${oppositeColor.toUpperCase()} should have exactly atleast 1 royal! Counted: ${royalCount}`)
         
     //     return true;
     // }
 
     // function verifyAllpiecescaptured(piecesOrganizedByType, color) {
-    //     const oppositeColor = math.getOppositeColor(color)
+    //     const oppositeColor = colorutil.getOppositeColor(color)
 
     //     // Check to make sure there is atleast 1 piece!
     //     const pieceCount = gamefileutility.getPieceCountOfColorFromPiecesByType(piecesOrganizedByType, oppositeColor)
@@ -449,10 +466,10 @@ const copypastegame = (function() {
     // }
 
     // function verifyThreecheck(piecesOrganizedByType, color) {
-    //     const oppositeColor = math.getOppositeColor(color)
+    //     const oppositeColor = colorutil.getOppositeColor(color)
 
     //     // Check to make sure there is atleast 1 royal!
-    //     const royalCount = gamefileutility.getCountOfTypesFromPiecesByType(piecesOrganizedByType, pieces.royals, oppositeColor)
+    //     const royalCount = gamefileutility.getCountOfTypesFromPiecesByType(piecesOrganizedByType, typeutil.royals, oppositeColor)
     //     if (royalCount < 1) return displayError(`When ${color.toUpperCase()} has a win condition of 'threecheck', ${oppositeColor.toUpperCase()} should have exactly atleast 1 royal! Counted: ${royalCount}`)
         
     //     return true;
@@ -477,3 +494,5 @@ const copypastegame = (function() {
     });
 
 })();
+
+export default copypastegame;

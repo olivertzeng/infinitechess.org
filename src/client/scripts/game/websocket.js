@@ -1,8 +1,15 @@
 
-/**
- * This script creates websockets connected to the server,
- * sends and receives incoming messages.
- */
+// Import Start
+import statustext from './gui/statustext.js';
+import invites from './misc/invites.js';
+import guiplay from './gui/guiplay.js';
+import onlinegame from './misc/onlinegame.js';
+import localstorage from './misc/localstorage.js';
+import timeutil from './misc/timeutil.js';
+import uuid from './misc/uuid.js';
+import config from './config.js';
+import thread from './misc/thread.js';
+// Import End
 
 "use strict";
 
@@ -18,7 +25,10 @@
  * @property {number} replyto - The ID of the message this message is the reply to, if specified.
  */
 
-// eslint-disable-next-line no-unused-vars
+/**
+ * This script creates websockets connected to the server,
+ * sends and receives incoming messages.
+ */
 const websocket = (function() {
     
     /** The websocket object we will use to send and receive messages from the server. */
@@ -88,8 +98,8 @@ const websocket = (function() {
         if (inTimeout) return false;
 
         while (openingSocket || (socket && socket.readyState !== WebSocket.OPEN)) {
-            if (main.devBuild) console.log("Waiting for the socket to be established or closed..");
-            await main.sleep(100); // NEVER open more than 1 socket!
+            if (config.DEV_BUILD) console.log("Waiting for the socket to be established or closed..");
+            await thread.sleep(100); // NEVER open more than 1 socket!
         }
         if (socket && socket.readyState === WebSocket.OPEN) return true;
 
@@ -106,7 +116,7 @@ const websocket = (function() {
             statustext.showStatusForDuration(translations.websocket.no_connection, timeToResubAfterNetworkLossMillis);
             onlinegame.onLostConnection();
             invites.clearIfOnPlayPage(); // Erase on-screen invites.
-            await main.sleep(timeToResubAfterNetworkLossMillis);
+            await thread.sleep(timeToResubAfterNetworkLossMillis);
             success = await openSocket();
         }
         // This is the only instance where we've reconnected.
@@ -218,7 +228,7 @@ const websocket = (function() {
 
         const isEcho = message.action === "echo";
 
-        if (printAllIncomingMessages && main.devBuild) {
+        if (printAllIncomingMessages && config.DEV_BUILD) {
             if (isEcho) { if (alsoPrintIncomingEchos) console.log(`Incoming message: ${JSON.stringify(message)}`); }
             else console.log(`Incoming message: ${JSON.stringify(message)}`);
         }
@@ -278,7 +288,7 @@ const websocket = (function() {
                 break;
             case "gameversion":
                 // If the current version doesn't match, hard refresh.
-                if (value !== main.GAME_VERSION) handleHardRefresh(value);
+                if (value !== config.GAME_VERSION) handleHardRefresh(value);
                 break;
             default:
                 console.log(`We don't know how to treat this server action in general route: Action "${action}". Value: ${value}`);
@@ -321,7 +331,7 @@ const websocket = (function() {
         };
         const preexistingHardRefreshInfo = localstorage.loadItem('hardrefreshinfo');
         if (preexistingHardRefreshInfo?.expectedVersion === GAME_VERSION) { // Don't hard-refresh, we've already tried for this version.
-            if (!preexistingHardRefreshInfo.sentNotSupported) sendFeatureNotSupported(`location.reload(true) failed to hard refresh. Server version: ${GAME_VERSION}. Still running: ${main.GAME_VERSION}`);
+            if (!preexistingHardRefreshInfo.sentNotSupported) sendFeatureNotSupported(`location.reload(true) failed to hard refresh. Server version: ${GAME_VERSION}. Still running: ${config.GAME_VERSION}`);
             preexistingHardRefreshInfo.sentNotSupported = true;
             saveInfo(preexistingHardRefreshInfo);
             return;
@@ -329,7 +339,7 @@ const websocket = (function() {
         saveInfo(reloadInfo);
         location.reload(true);
 
-        function saveInfo(info) { localstorage.saveItem('hardrefreshinfo', info, math.getTotalMilliseconds({ days: 1 })); }
+        function saveInfo(info) { localstorage.saveItem('hardrefreshinfo', info, timeutil.getTotalMilliseconds({ days: 1 })); }
     }
 
     function sendFeatureNotSupported(description) {
@@ -343,7 +353,7 @@ const websocket = (function() {
      * @param {Event} event - The 'close' event fired.
      */
     function onclose(event) {
-        if (main.devBuild) console.log('WebSocket connection closed:', event.code, event.reason);
+        if (config.DEV_BUILD) console.log('WebSocket connection closed:', event.code, event.reason);
         const wasFullyOpen = socket !== undefined; // Socket is only defined when it FULLY opens (and not immediatly closes from no network)
 
         socket = undefined;
@@ -491,9 +501,9 @@ const websocket = (function() {
             value, // sublist/inviteinfo
         };
         const isEcho = action === "echo";
-        if (!isEcho) payload.id = math.generateNumbID(10);
+        if (!isEcho) payload.id = uuid.generateNumbID(10);
 
-        if (printAllSentMessages && main.devBuild) {
+        if (printAllSentMessages && config.DEV_BUILD) {
             if (isEcho) { if (alsoPrintSentEchos) console.log(`Sending: ${JSON.stringify(payload)}`); }
             else console.log(`Sending: ${JSON.stringify(payload)}`);
         }
@@ -601,7 +611,7 @@ const websocket = (function() {
      * Games will have to be resynced.
      */
     async function resubAll() {
-        if (main.devBuild) console.log("Resubbing all..");
+        if (config.DEV_BUILD) console.log("Resubbing all..");
 
         if (zeroSubs()) {
             noConnection = false; // We don't care if we are no longer connected if we don't even need an open socket.
@@ -691,3 +701,5 @@ const websocket = (function() {
     });
 
 })();
+
+export default websocket;

@@ -1,15 +1,20 @@
 
-/*
+// Import Start
+import style from './style.js';
+import guigameinfo from './guigameinfo.js';
+import drawoffers from '../misc/drawoffers.js';
+import clock from '../misc/clock.js';
+// Import End
+
+"use strict";
+
+/**
  * This script opens and closes our Draw Offer UI
  * on the bottom navigation bar.
  * 
  * It does NOT calculate if extending an offer is legal,
  * nor does it keep track of our current offers!
  */
-
-"use strict";
-
-// eslint-disable-next-line no-unused-vars
 const guidrawoffer = (function() {
 
     const element_draw_offer_ui = document.getElementById('draw_offer_ui');
@@ -96,3 +101,5 @@ const guidrawoffer = (function() {
     });
 
 })();
+
+export default guidrawoffer;

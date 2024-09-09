@@ -1,11 +1,30 @@
 
-// This script contains adjustable options such as
-// *Board color
-// *Highlight color
-// etc
+// Import Start
+import input from '../input.js';
+import onlinegame from '../misc/onlinegame.js';
+import highlights from './highlights.js';
+import stats from '../gui/stats.js';
+import perspective from './perspective.js';
+import guinavigation from '../gui/guinavigation.js';
+import selection from '../chess/selection.js';
+import piecesmodel from './piecesmodel.js';
+import camera from './camera.js';
+import board from './board.js';
+import game from '../chess/game.js';
+import statustext from '../gui/statustext.js';
+import guigameinfo from '../gui/guigameinfo.js';
+import colorutil from '../misc/colorutil.js';
+import frametracker from './frametracker.js';
+// Import End
 
 "use strict";
 
+/**
+ * This script contains adjustable options such as
+ * *Board color
+ * *Highlight color
+ * etc
+ */
 const options = (function() {
 
     // When enabled, your view is expanded to show what you normally can't see beyond the edge of the screen.
@@ -110,7 +129,7 @@ const options = (function() {
     }
 
     function toggleDeveloperMode() {
-        main.renderThisFrame(); // Visual change, render the screen this frame
+        frametracker.onVisualChange(); // Visual change, render the screen this frame
         debugMode = !debugMode;
         camera.onPositionChange();
         perspective.initCrosshairModel();
@@ -138,7 +157,7 @@ const options = (function() {
         const legalInPrivate = onlinegame.areInOnlineGame() && onlinegame.getIsPrivate() && input.isKeyHeld('0');
         if (onlinegame.areInOnlineGame() && !legalInPrivate) return; // Don't toggle if in an online game
 
-        main.renderThisFrame(); // Visual change, render the screen this frame
+        frametracker.onVisualChange(); // Visual change, render the screen this frame
         em = !em;
         statustext.showStatus(`${translations.rendering.toggled_edit} ` + (em ? translations.rendering.on : translations.rendering.off));
     }
@@ -228,7 +247,7 @@ const options = (function() {
         const colorArgs = getPieceRegenColorArgs(); // { white, black, neutral }
         if (!colorArgs) return { r: 1, g: 1, b: 1, a: 1 }; // No theme, return default white.
 
-        const pieceColor = math.getPieceColorFromType(type); // white/black/neutral
+        const pieceColor = colorutil.getPieceColorFromType(type); // white/black/neutral
         const color = colorArgs[pieceColor]; // [r,g,b,a]
 
         return {
@@ -281,3 +300,5 @@ const options = (function() {
         isFPSOn
     });
 })();
+
+export default options;

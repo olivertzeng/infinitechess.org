@@ -1,11 +1,24 @@
 
+// Import Start
+import wincondition from './wincondition.js';
+import gamefileutility from './gamefileutility.js';
+import movesscript from './movesscript.js';
+import legalmoves from './legalmoves.js';
+import typeutil from '../misc/typeutil.js';
+// Import End
+
+/** 
+ * Type Definitions 
+ * @typedef {import('./gamefile.js').gamefile} gamefile
+ * @typedef {import('./movesscript.js').Move} Move
+*/
+
+"use strict";
+
 /**
  * This script contains our checkmate algorithm,
  * and 3-fold repetition algorithm.
  */
-
-"use strict";
-
 const checkmate = (function() {
 
     /**
@@ -23,7 +36,7 @@ const checkmate = (function() {
         // know the game is not over yet...
 
         const whosTurn = gamefile.whosTurn;
-        const teamTypes = pieces[whosTurn];
+        const teamTypes = typeutil.colorsTypes[whosTurn];
         for (const thisType of teamTypes) {
             const thesePieces = gamefile.ourPieces[thisType];
             for (let a = 0; a < thesePieces.length; a++) {
@@ -40,7 +53,7 @@ const checkmate = (function() {
         // We made it through every single piece without finding a single move.
         // So is this draw or checkmate? Depends on whether the current state is check!
         // Also make sure that checkmate can't happen if the winCondition is NOT checkmate!
-        const usingCheckmate = wincondition.isOpponentUsingWinCondition(gamefile, 'checkmate');
+        const usingCheckmate = gamefileutility.isOpponentUsingWinCondition(gamefile, 'checkmate');
         if (gamefile.inCheck && usingCheckmate) {
             const colorThatWon = movesscript.getColorThatPlayedMoveIndex(gamefile, gamefile.moves.length - 1);
             return `${colorThatWon} checkmate`;
@@ -84,7 +97,7 @@ const checkmate = (function() {
     //     // console.log('Begin checking for checkmate!')
     //     // main.startTimer()
 
-    //     const whiteOrBlack = whosTurn === 'white' ? pieces.white : pieces.black;
+    //     const whiteOrBlack = whosTurn === 'white' ? typeutil.colorsTypes.white : typeutil.colorsTypes.black;
     //     for (let i = 0; i < whiteOrBlack.length; i++) {
     //         const thisType = whiteOrBlack[i];
     //         const thesePieces = gamefile.ourPieces[thisType]
@@ -116,9 +129,9 @@ const checkmate = (function() {
     //                     stats.hideMoveLooking();
     //                     return;
     //                 }
-    //                 if (main.gforceCalc()) {
+    //                 if (loadbalancer.getForceCalc()) {
     //                     pieceLimitToRecalcTime = Infinity;
-    //                     main.sforceCalc(false);
+    //                     loadbalancer.setForceCalc(false);
     //                 }
     //             }
     //         }
@@ -131,7 +144,7 @@ const checkmate = (function() {
     //         // console.log(`Too much! Sleeping.. Used ${performance.now() - startTime} of our allocated ${maxTimeToSpend}`)
     //         const percentComplete = piecesComplete / ourPieceCount;
     //         stats.updateMoveLooking(percentComplete);
-    //         await main.sleep(0);
+    //         await thread.sleep(0);
     //         startTime = performance.now();
     //         timeToStop = startTime + loadbalancer.getLongTaskTime();
     //     }
@@ -149,7 +162,7 @@ const checkmate = (function() {
     //     // We made it through every single piece without finding a single move.
     //     // So is this draw or checkmate? Depends on whether the current state is check!
     //     // Also make sure that checkmate can't happen if the winCondition is NOT checkmate!
-    //     const usingCheckmate = wincondition.isOpponentUsingWinCondition(gamefile, 'checkmate')
+    //     const usingCheckmate = gamefileutility.isOpponentUsingWinCondition(gamefile, 'checkmate')
     //     if (gamefile.inCheck && usingCheckmate) {
 
     //         if (whosTurn === 'white') return 'black checkmate' // Black wins
@@ -231,3 +244,5 @@ const checkmate = (function() {
         detectCheckmateOrDraw,
     });
 })();
+
+export default checkmate;

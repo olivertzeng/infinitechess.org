@@ -1,5 +1,7 @@
 
-/*
+'use strict';
+
+/**
  * Universal Infinite Chess Notation [Converter] and Interface
  * by Andreas Tsevas and Naviary
  * https://github.com/tsevasa/infinite-chess-notation
@@ -8,10 +10,6 @@
  * compact ICN (Infinite Chess Noation) and back, still human-readable,
  * but taking less space to describe positions.
  */
-
-'use strict';
-
-// eslint-disable-next-line no-unused-vars
 const formatconverter = (function() {
     
     const pieceDictionary = {
@@ -435,15 +433,6 @@ const formatconverter = (function() {
                 longformat.shortposition = string;
                 continue;
             }
-            /*
-            // Set starting position according to variant name here, if it is not defined yet
-            // This will get run when the current string is in an illegal format or if it is the start of the moves (thus, moves always need to be at the end)
-            if (!longformat["startingPosition"] && longformat["metadata"]["Variant"]){
-                // Naviary, enable these lines below:
-                // const positionAndRights = variant.getStartingPositionOfVariant({ Variant: longformat.metadata.Variant, Version: longformat.metadata.Version })
-                // longformat.startingPosition = positionAndRights.position
-                // longformat.specialRights = positionAndRights.specialRights
-            }*/
 
             //moves - conversion stops here
             if (/^(([0-9]+\.)|([a-zA-Z]*-?[0-9]+,-?[0-9]+[\s]*(x|>)+))/.test(string)) {
@@ -451,10 +440,14 @@ const formatconverter = (function() {
                 const moves = convertShortMovesToLong(shortmoves);
                 if (moves.length > 0) longformat.moves = moves;
                 if (!longformat.gameRules.winConditions) longformat.gameRules.winConditions = { white: ['checkmate'], black: ['checkmate'] }; // Default win conditions if none specified
+                longformat.gameRules.turnOrder = longformat.gameRules.turnOrder || ['white','black']; // Default turn order if none specified
+                longformat.fullMove = longformat.fullMove || 1;
                 return longformat;
             }
         }
         if (!longformat.gameRules.winConditions) longformat.gameRules.winConditions = { white: ['checkmate'], black: ['checkmate'] }; // Default win conditions if none specified
+        longformat.gameRules.turnOrder = longformat.gameRules.turnOrder || ['white','black']; // Default turn order if none specified
+        longformat.fullMove = longformat.fullMove || 1;
         return longformat;
     }
 
@@ -1030,7 +1023,10 @@ const formatconverter = (function() {
         getStartingPositionAndSpecialRightsFromShortPosition,
         generateSpecialRights,
         convertShortMovesToLong,
-        longToShortMoves
+        longToShortMoves,
+        ShortToLong_Piece
     });
     
 })();
+
+export default formatconverter;
